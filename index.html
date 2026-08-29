@@ -280,6 +280,7 @@ let best = 0, spawnTimer = 0, shake = 0, dead = 0;
 let hero = null, held = null, tense = false, slow = 0;
 let started = false, menu = false;
 let score = 0, kills = 0, record = 0;
+let hooked = null, thrown = 0, grabs = 0;   // как быстро едет петля
 let theme = null, bossDone = false;
 let segNow = 11;   // рабочая длина звена: под напряжением цепь подбирается
 let wave = 0, spawnLeft = 0, paused = false;
@@ -310,7 +311,7 @@ function reset() {
     foes = []; orbs = []; nums = []; trail = []; bits = [];
     rock = { x: W / 2, y: H * 0.28, vx: 0, vy: 0, r: 19 };
     aim = { x: W / 2, y: H / 2, down: false };
-    best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0;
+    best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
     srand(Math.floor(Math.random() * 2147483647));
     startWave();
 }
@@ -495,7 +496,7 @@ function swept(p, e, r) {
 function combat(dt) {
     for (const e of foes) {
         e.iframe -= dt;
-        if (e.iframe > 0) continue;
+        if (e.iframe > 0 || e === hooked) continue;   // за что держишься, то не бьёшь
         let hitPart = -1, hitSeg = -1;
         for (let i = 1; i < pts.length && hitPart < 0; i++) {
             const r = radiusAt(i);
@@ -509,7 +510,14 @@ function combat(dt) {
             const i = hitSeg, p = pts[i];
             const [vx, vy] = vel(p);
             const sp = Math.hypot(vx, vy);
-            if (sp < HIT_SPEED) continue;
+            if (sp < HIT_SPEED) {
+                // Медленное касание не бьёт — оно цепляет: цепь обматывает.
+                if (!hooked && !e.boss && !e.held && i >= pts.length - BLADE) {
+                    hooked = e; e.held = true; grabs++;
+                    blip(320, 0.1, 'square', 0.1, 180);
+                }
+                continue;
+            }
             if (e.armor && sp < e.armor) {          // панцирь: касание не считается
                 e.iframe = 0.12; e.flash = 0.4;
                 nums.push({ x: e.x, y: e.y - 10, v: 'бронь', t: 0.45 });
@@ -543,18 +551,20 @@ function combat(dt) {
     }
 
     // Обвивка: замкнул тело в кольцо — всё внутри стягивается и трещит.
-    const j = loopEnd();
-    if (j > 0) {
-        const poly = pts.slice(0, j + 1);
-        let cx = 0, cy = 0;
-        for (const p of poly) { cx += p.x; cy += p.y; }
-        cx /= poly.length; cy /= poly.length;
-        for (const e of foes) {
-            if (!inside(poly, e.x, e.y)) continue;
-            e.hp -= 22 * dt;
-            e.x += (cx - e.x) * 2.2 * dt; e.y += (cy - e.y) * 2.2 * dt;
-            e.squeeze = 1;
-            if (e.hp <= 0) kill(e);
+    if (hooked) {
+        const t = pts[pts.length - 1];
+        const [tvx, tvy] = vel(t);
+        if (hooked.dead) { hooked = null; }
+        else {
+            hooked.hp -= 3 * dt;
+            hooked.squeeze = 1;
+            for (const q of hooked.p) {           // тащится за кончиком
+                q.x += (t.x - hooked.x) * 6 * dt;
+                q.y += (t.y - hooked.y) * 6 * dt;
+            }
+            hooked.x = hooked.p[1].x; hooked.y = hooked.p[1].y;
+            if (hooked.hp <= 0) { kill(hooked); hooked = null; }
+            else if (Math.hypot(tvx, tvy) > 620) letGo(hooked);   // разогнал — швырнул
         }
     }
 
@@ -612,6 +622,45 @@ function hurt(e, dmg, kx, ky, part) {
         kills++;
         score += Math.round((e.boss ? 300 : 12) * (1 + dmg / 45));
         kill(e, kx, ky);
+    }
+}
+
+/**
+ * Раскрыл петлю на ходу — схваченный улетает с её скоростью. Отдельной
+ * кнопки нет: бросок это то же движение, которым ты и так машешь.
+ */
+function letGo(e) {
+    e.held = false;
+    if (hooked === e) hooked = null;
+    const t = pts[pts.length - 1];
+    const [vx, vy] = vel(t);
+    const sp = Math.hypot(vx, vy);
+    if (sp < 260 || e.dead) return;                 // просто разжал, не бросок
+    for (const q of e.p) push(q, vx * 0.85, vy * 0.85);
+    e.flying = 0.9;
+    e.iframe = 0.1;
+    thrown++;
+    blip(240, 0.16, 'sawtooth', 0.13, 520);
+    nums.push({ x: e.x, y: e.y - 14, v: 'бросок', t: 0.6 });
+}
+
+/** Летящее тело — снаряд: и само бьётся, и сносит тех, в кого прилетело. */
+function flying(e, dt) {
+    e.flying -= dt;
+    const q = e.p[1];
+    const vx = (q.x - q.px) / DT, vy = (q.y - q.py) / DT;
+    const sp = Math.hypot(vx, vy);
+    if (sp < 300) return;
+    for (const o of foes) {
+        if (o === e || o.dead || o.held || o.iframe > 0) continue;
+        if (Math.hypot(o.x - e.x, o.y - e.y) > o.r + e.r) continue;
+        o.iframe = 0.16; e.iframe = 0.16;
+        const dmg = sp / 30;
+        hurt(o, dmg, vx * 0.45, vy * 0.45);
+        if (!e.dead) hurt(e, dmg * 0.5, -vx * 0.15, -vy * 0.15);
+        score += 8;                                  // за попадание телом в тело
+        shake = Math.min(1, shake + 0.3);
+        break;
     }
 }
 
@@ -752,7 +801,7 @@ function spawn() {
         r: k.r, link: k.link, walk: k.walk, damp: k.damp, mass: k.mass, armor: k.armor,
         color: k.color, dark: k.dark,
         iframe: 0, flash: 0, squeeze: 0, touch: 0,
-        p: body(x, y, k.link),
+        p: body(x, y, k.link), held: false, flying: 0,
     });
 }
 
@@ -777,11 +826,15 @@ function moveFoes(dt) {
         }
         const dx = hero.x - e.p[1].x, dy = hero.y - e.p[1].y;
         const d = Math.hypot(dx, dy) || 1;
-        const walk = e.walk * dt;
-        const wx = dx / d * walk, wy = dy / d * walk;
-        for (const q of e.p) {
-            q.x += wx; q.y += wy;
-            q.px += wx; q.py += wy;     // сдвигаем и прошлую точку, иначе шаг копится в скорости
+        if (e.flying > 0) {
+            flying(e, dt);                          // летит — не идёт
+        } else if (!e.held) {
+            const walk = e.walk * dt;
+            const wx = dx / d * walk, wy = dy / d * walk;
+            for (const q of e.p) {
+                q.x += wx; q.y += wy;
+                q.px += wx; q.py += wy;   // сдвигаем и прошлую точку, иначе шаг копится в скорости
+            }
         }
         for (let k = 0; k < 2; k++) {
             stick(e.p[0], e.p[1], e.link);
@@ -871,6 +924,7 @@ const RULES = '<ul>' +
     '<li>Уведёшь руку дальше плеча — викинг пойдёт следом.</li>' +
     '<li><b>Второй палец</b> — подобрать: оружие подтягивается к руке и твердеет. Так наводят удар.</li>' +
     '<li>Светящиеся куски врагов можно подобрать: это временное оружие.</li>' +
+    '<li><b>Медленное касание не бьёт, а цепляет.</b> Зацепил — разгонись и отпусти: враг улетит в остальных.</li>' +
     '</ul>';
 
 function showResult() {
@@ -976,25 +1030,6 @@ function offerCards() {
         pick[+b.dataset.u][2]();
         startWave();
     };
-}
-
-/* ─────────────────────────── Геометрия кольца ──────────────────────────── */
-
-function loopEnd() {
-    const h = pts[0];
-    for (let j = pts.length - 1; j >= 7; j--) {
-        if (Math.hypot(pts[j].x - h.x, pts[j].y - h.y) < S.seg * 1.4) return j;
-    }
-    return -1;
-}
-
-function inside(poly, x, y) {
-    let c = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-        const a = poly[i], b = poly[j];
-        if ((a.y > y) !== (b.y > y) && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) c = !c;
-    }
-    return c;
 }
 
 /* ──────────────────────────────── Отрисовка ────────────────────────────── */
@@ -1128,14 +1163,10 @@ function draw() {
 
     drawGround();
 
-    const j = loopEnd();
-    if (j > 0) {
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i <= j; i++) ctx.lineTo(pts[i].x, pts[i].y);
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(90,230,160,.13)'; ctx.fill();
-        ctx.strokeStyle = 'rgba(120,255,190,.35)'; ctx.lineWidth = 2; ctx.stroke();
+    if (hooked && !hooked.dead) {
+        const t = pts[pts.length - 1];
+        ctx.strokeStyle = 'rgba(120,255,190,.55)'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(t.x, t.y); ctx.lineTo(hooked.x, hooked.y); ctx.stroke();
     }
 
     for (const o of orbs) {
@@ -1173,6 +1204,11 @@ function draw() {
     ctx.globalAlpha = 1;
 
     for (const e of foes) {
+        if (e.held || e.flying > 0) {
+            ctx.strokeStyle = e.held ? 'rgba(120,255,190,.8)' : 'rgba(255,214,110,.75)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 1.5, 0, 7); ctx.stroke();
+        }
         if (drawFoeSprite(e)) continue;
         const r = e.r * (1 - e.squeeze * 0.3);
         const white = e.flash > 0;
@@ -1495,18 +1531,22 @@ if (location.search.includes('test')) {
         $('start').classList.remove('on');   // чтобы было видно арену
         started = true;
         aim.down = true;
-        let peak = 0;
+        let peak = 0, ang = 0;
+        const R = parseInt((location.search.match(/[?&]r=(\d+)/) || [])[1], 10) || 120;
         const N = parseInt(location.search.split('test=')[1], 10) || 900;
         for (let k = 0; k < N; k++) {
             const t = k / 120;
-            aim.x = W / 2 + Math.cos(t * 7) * 120;
-            aim.y = H / 2 + Math.sin(t * 7) * 120;
+            // Чередуем быстрый замах и медленное подведение: иначе бот не
+            // умеет цеплять, и захват с броском нечем проверить.
+            ang += ((Math.floor(t / 2.5) % 2) ? 7 : 0.7) / 120;
+            aim.x = W / 2 + Math.cos(ang) * R;
+            aim.y = H / 2 + Math.sin(ang) * R;
             if (paused) startWave();          // карточки в тесте пропускаем
             step(1 / 120);
             const q = pts[pts.length - 1];
             peak = Math.max(peak, Math.hypot(q.x - q.px, q.y - q.py) * 120);
         }
-        console.log('САМОПРОВЕРКА: волна ' + wave + ', счёт ' + score + ', убито ' + kills + ', врагов ' + foes.length +
+        console.log('САМОПРОВЕРКА: волна ' + wave + ', счёт ' + score + ', убито ' + kills + ', схвачено ' + grabs + ', бросков ' + thrown + ', врагов ' + foes.length +
             ', ошмётков ' + bits.length + ', лучший удар ' + Math.round(best) +
             ', кусок в руке: ' + (held ? held.hits : 'нет') +
             ', длина ' + pts.length + ', здоровье ' + hero.hp +
