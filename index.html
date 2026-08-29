@@ -663,6 +663,7 @@ function hurt(e, dmg, kx, ky, part) {
     push(q, kx * kr, ky * kr);
     for (const o of e.p) if (o !== q) push(o, kx * kr * 0.3, ky * kr * 0.3);
     if (dmg > 40) slow = Math.max(slow, 0.09);
+    if (dmg > 14 && !e.boss && !e.chain) e.down = Math.max(e.down, 0.6 + dmg / 60);
     if (dmg > 18) stain(q.x, q.y, 3.5, e.dark, 0.3);   // брызги остаются на земле
     e.flash = 1;
     nums.push({ x: e.x, y: e.y, v: Math.round(dmg), t: 0.6, big: dmg > 25 });
@@ -688,6 +689,7 @@ function letGo(e) {
     if (sp < 260 || e.dead) return;                 // просто разжал, не бросок
     for (const q of e.p) push(q, vx * 0.85, vy * 0.85);
     e.flying = 0.9;
+    e.down = Math.max(e.down, 1.1);      // после полёта надо ещё встать
     e.iframe = 0.1;
     thrown++;
     blip(240, 0.16, 'sawtooth', 0.13, 520);
@@ -856,7 +858,7 @@ function spawn() {
         r: k.r, link: k.link, walk: k.walk, damp: k.damp, mass: k.mass, armor: k.armor,
         color: k.color, dark: k.dark,
         iframe: 0, flash: 0, squeeze: 0, touch: 0,
-        chain: k.chain || 0,
+        chain: k.chain || 0, step: 0, down: 0,
         p: body(x, y, k.link, k.chain || 3), held: false, flying: 0,
     });
 }
@@ -882,7 +884,9 @@ function moveFoes(dt) {
         }
         const dx = hero.x - e.p[1].x, dy = hero.y - e.p[1].y;
         const d = Math.hypot(dx, dy) || 1;
-        if (e.flying > 0) {
+        if (e.down > 0) {
+            e.down -= dt;                           // лежит: не идёт и не мешает
+        } else if (e.flying > 0) {
             flying(e, dt);                          // летит — не идёт
         } else if (!e.held) {
             const walk = e.walk * dt;
@@ -893,6 +897,7 @@ function moveFoes(dt) {
                 q.x += wx; q.y += wy;
                 q.px += wx; q.py += wy;   // сдвигаем и прошлую точку, иначе шаг копится в скорости
             }
+            e.step += Math.hypot(wx, wy) / e.link;   // фаза шага идёт от пройденного пути
         }
         for (let k = 0; k < 2; k++) {
             for (let i = 1; i < e.p.length; i++) stick(e.p[i - 1], e.p[i], e.link);
@@ -985,7 +990,7 @@ const WEAPONS = [
 const RULES = '<ul>' +
     '<li><b>Урон — от скорости</b>, а не от касания: медленно подвёл — ноль.</li>' +
     '<li>Уведёшь руку дальше плеча — викинг пойдёт следом.</li>' +
-    '<li><b>Второй палец</b> — подобрать: оружие подтягивается к руке и твердеет. Так наводят удар.</li>' +
+    '<li><b>Второй палец</b> (на компе — <b>Shift</b>) подбирает оружие: оно подтягивается к руке и твердеет. Так наводят удар.</li>' +
     '<li>Светящиеся куски врагов можно подобрать: это временное оружие.</li>' +
     '<li><b>Медленное касание не бьёт, а цепляет.</b> Зацепил — разгонись и отпусти: враг улетит в остальных.</li>' +
     '</ul>';
@@ -1159,10 +1164,20 @@ function drawFoeSprite(e) {
     const pre = KIND_SPR[e.kind];
     const torso = SPR[pre + '-torso'];
     if (!pre || !ready(torso)) return false;
-    const k = (e.r * 2.3) / torso.naturalWidth;
+    const lying = e.down > 0;
+    // Лежачий вжат в землю и отброшен тенью: видно, что он не в строю.
+    const k = (e.r * 2.3) / torso.naturalWidth * (lying ? 0.8 : 1);
+    if (lying) {
+        ctx.fillStyle = 'rgba(0,0,0,.4)';
+        for (const q of e.p) {
+            ctx.beginPath(); ctx.ellipse(q.x, q.y + 3, e.r * 0.9, e.r * 0.45, 0, 0, 7); ctx.fill();
+        }
+    }
     const legs = SPR[pre + '-legs'], head = SPR[pre + '-head'];
-    if (ready(legs)) drawPart(legs, e.p[2].x, e.p[2].y, k, boneAng(e.p[2], e.p[1]));
-    drawPart(torso, e.p[1].x, e.p[1].y, k, boneAng(e.p[2], e.p[0]));
+    // Фаза шага крутится от пройденного пути, поэтому стоящий не сучит ногами.
+    const gait = lying ? 0 : Math.sin(e.step * 5.5) * 0.34;
+    if (ready(legs)) drawPart(legs, e.p[2].x, e.p[2].y, k, boneAng(e.p[2], e.p[1]) + gait);
+    drawPart(torso, e.p[1].x, e.p[1].y, k, boneAng(e.p[2], e.p[0]) - gait * 0.25);
     if (ready(head)) drawPart(head, e.p[0].x, e.p[0].y, k, boneAng(e.p[1], e.p[0]));
 
     const extra = e.boss ? SPR['boss-hulk-plates'] : (e.kind === 'щитоносец' ? SPR['foe-shield-shield'] : null);
