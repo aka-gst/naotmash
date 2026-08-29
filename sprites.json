@@ -388,13 +388,12 @@
   "note": "крепление оружия"
  },
  "weapon-sword-blade": {
-  "w": 90,
-  "h": 33,
+  "w": 34,
+  "h": 96,
   "pivot": [
    0.5,
-   0.5
-  ],
-  "note": "center"
+   0.9
+  ]
  },
  "weapon-sword-haft": {
   "w": 33,
@@ -404,5 +403,53 @@
    0.5
   ],
   "note": "крепление оружия"
+ },
+ "weapon-spear-haft": {
+  "w": 30,
+  "h": 16,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "weapon-spear-blade": {
+  "w": 30,
+  "h": 84,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "boss-worm-head": {
+  "w": 76,
+  "h": 72,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "boss-worm-link": {
+  "w": 60,
+  "h": 54,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "boss-worm-tail": {
+  "w": 48,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-spear": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
  }
 }
