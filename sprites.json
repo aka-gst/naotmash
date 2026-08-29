@@ -699,5 +699,765 @@
    0.5,
    0.5
   ]
+ },
+ "weapon-club-haft": {
+  "w": 30,
+  "h": 20,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-club-blade": {
+  "w": 46,
+  "h": 70,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-halberd-haft": {
+  "w": 30,
+  "h": 16,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-halberd-blade": {
+  "w": 64,
+  "h": 88,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-pick-haft": {
+  "w": 28,
+  "h": 14,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-pick-blade": {
+  "w": 54,
+  "h": 62,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-mace-link": {
+  "w": 30,
+  "h": 18,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-mace-head": {
+  "w": 48,
+  "h": 48,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-sickle-link": {
+  "w": 26,
+  "h": 14,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-sickle-head": {
+  "w": 62,
+  "h": 54,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-hook-link": {
+  "w": 26,
+  "h": 14,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-hook-head": {
+  "w": 44,
+  "h": 66,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-hammer-link": {
+  "w": 32,
+  "h": 20,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "weapon-hammer-head": {
+  "w": 58,
+  "h": 52,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "foe-crawler-head": {
+  "w": 34,
+  "h": 22,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "foe-crawler-torso": {
+  "w": 70,
+  "h": 34,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "foe-crawler-legs": {
+  "w": 62,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "foe-jumper-head": {
+  "w": 32,
+  "h": 30,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "foe-jumper-torso": {
+  "w": 40,
+  "h": 62,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "foe-jumper-legs": {
+  "w": 46,
+  "h": 44,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "foe-brute-head": {
+  "w": 28,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "foe-brute-torso": {
+  "w": 86,
+  "h": 54,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "foe-brute-legs": {
+  "w": 72,
+  "h": 42,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "foe-spike-head": {
+  "w": 46,
+  "h": 46,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "foe-spike-torso": {
+  "w": 50,
+  "h": 48,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "foe-spike-legs": {
+  "w": 48,
+  "h": 38,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "foe-husk-head": {
+  "w": 34,
+  "h": 30,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "foe-husk-torso": {
+  "w": 40,
+  "h": 58,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "foe-husk-legs": {
+  "w": 36,
+  "h": 46,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "boss-bone-head": {
+  "w": 60,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "boss-bone-torso": {
+  "w": 84,
+  "h": 110,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "boss-bone-legs": {
+  "w": 76,
+  "h": 86,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "boss-bone-arms": {
+  "w": 130,
+  "h": 40,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "hero-berserk-head": {
+  "w": 42,
+  "h": 42,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "hero-berserk-torso": {
+  "w": 52,
+  "h": 60,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "hero-berserk-body": {
+  "w": 60,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "hero-berserk-hand": {
+  "w": 20,
+  "h": 20,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "hero-berserk-legs": {
+  "w": 46,
+  "h": 42,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "hero-shield-head": {
+  "w": 42,
+  "h": 42,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "hero-shield-torso": {
+  "w": 52,
+  "h": 60,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "hero-shield-body": {
+  "w": 60,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "hero-shield-hand": {
+  "w": 20,
+  "h": 20,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "hero-shield-legs": {
+  "w": 46,
+  "h": 42,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "hero-witch-head": {
+  "w": 42,
+  "h": 42,
+  "pivot": [
+   0.5,
+   0.65
+  ]
+ },
+ "hero-witch-torso": {
+  "w": 52,
+  "h": 60,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "hero-witch-body": {
+  "w": 60,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "hero-witch-hand": {
+  "w": 20,
+  "h": 20,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "hero-witch-legs": {
+  "w": 46,
+  "h": 42,
+  "pivot": [
+   0.5,
+   0.9
+  ]
+ },
+ "icon-armor": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-back": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-boom": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-chain": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-club": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-crit": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-halberd": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-hammer": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-heal": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-hook": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-mace": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-magnet": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-pause": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-pick": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-play": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-rage": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-reach": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-record": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-retry": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-second-wind": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-share": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-sickle": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-skull": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-slow": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-thorns": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-vampire": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "icon-wave": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "obstacle-barrel": {
+  "w": 72,
+  "h": 72,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "obstacle-crate": {
+  "w": 72,
+  "h": 72,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "obstacle-pillar": {
+  "w": 72,
+  "h": 72,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "obstacle-brazier": {
+  "w": 72,
+  "h": 72,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-yard-5": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-yard-6": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-yard-7": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-yard-8": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ice-5": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ice-6": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ice-7": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ice-8": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-hall-5": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-hall-6": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-hall-7": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-hall-8": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ash-5": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ash-6": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ash-7": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
+ },
+ "prop-ash-8": {
+  "w": 52,
+  "h": 64,
+  "pivot": [
+   0.5,
+   0.8
+  ]
  }
 }

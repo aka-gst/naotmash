@@ -50,6 +50,7 @@
     background: #0d1014e6; backdrop-filter: blur(3px); z-index: 5;
   }
   .modal.on { display: flex; }
+  .modal { overflow-y: auto; }
   .modal h2 { margin: 0 0 6px; font-size: 16px; font-weight: 600; color: #9fb0c2; }
   .modal button {
     display: flex; flex-direction: row; align-items: center; gap: 12px;
@@ -198,17 +199,14 @@ const BIOMES = [
 const SPR_SRC = {
     'prop-rock': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTQiIGhlaWdodD0iMTE0IiB2aWV3Qm94PSIwIDAgMTE0IDExNCI+PHBhdGggZD0iTTE2IDI4TDQ5IDggOTEgMTggMTA3IDU1IDg5IDk4IDQ0IDEwNiA5IDc4WiIgZmlsbD0iIzU5NjI2ZSIgc3Ryb2tlPSIjMzAzNjNkIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMzEgMzFMNTQgMjAgODAgMzAgOTEgNTUgNzUgNzkgNDMgODYgMjQgNjdaIiBmaWxsPSIjNmQ3NjgxIi8+PC9zdmc+',
     'pickup-soul': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIyNyIgdmlld0JveD0iMCAwIDI3IDI3Ij48cGF0aCBkPSJNMTQgMlEyNSA5IDE4IDE3UTE2IDIwIDIxIDI1UTggMjUgNSAxN1EyIDggMTQgMloiIGZpbGw9IiM4ZWYyYjAiIHN0cm9rZT0iIzNiOGI2MCIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
-    'weapon-flail-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDMwIDE4Ij48ZWxsaXBzZSBjeD0iMTUiIGN5PSI5IiByeD0iMTEiIHJ5PSI1IiBmaWxsPSJub25lIiBzdHJva2U9IiM5NmJlZDciIHN0cm9rZS13aWR0aD0iNCIvPjwvc3ZnPg==',
-    'weapon-flail-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSIgdmlld0JveD0iMCAwIDQ1IDQ1Ij48cGF0aCBkPSJNMjIgMkwyNyAxMSAzOCA3IDM0IDE4IDQ0IDIzIDM0IDI4IDM4IDM5IDI3IDM1IDIyIDQ0IDE3IDM1IDYgMzkgMTAgMjggMSAyMyAxMCAxOCA2IDcgMTcgMTFaIiBmaWxsPSIjOTZiZWQ3IiBzdHJva2U9IiMzMzRiNWIiIHN0cm9rZS13aWR0aD0iMyIvPjwvc3ZnPg==',
-    'weapon-axe-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNiIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDM2IDE4Ij48cmVjdCB4PSIzIiB5PSI2IiB3aWR0aD0iMzAiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IiM3ZDVmM2QiIHN0cm9rZT0iIzMwMjcxZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
-    'weapon-axe-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NiIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDY2IDYwIj48cGF0aCBkPSJNOCA5UTQ1IDQgNTkgMzBRNDUgNTYgOCA1MUwyMiAzMFoiIGZpbGw9IiNjZGFhNzMiIHN0cm9rZT0iIzVmNGEyZSIgc3Ryb2tlLXdpZHRoPSI1Ii8+PC9zdmc+',
-    'weapon-sword-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMyIgaGVpZ2h0PSIxNSIgdmlld0JveD0iMCAwIDMzIDE1Ij48cGF0aCBkPSJNMyA3SDMwTTE2IDJWMTMiIHN0cm9rZT0iI2JlYzhkNCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=',
-    'weapon-sword-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNCIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDM0IDk2Ij48cGF0aCBkPSJNMTcgMkwyNyAyMSAyMiA3MSAxNyA4MiAxMiA3MSA3IDIxWiIgZmlsbD0iI2JlYzhkNCIgc3Ryb2tlPSIjNTk2MjZlIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNMTcgNXY3MEwxMSAyMloiIGZpbGw9IiNlN2VkZjQiLz48cGF0aCBkPSJNNCA3OGgyNnY3SDR6TTEzIDg0aDh2OWgtOHoiIGZpbGw9IiM4YTYyMzgiIHN0cm9rZT0iIzVhNDAyNiIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTEwIDkyaDE0bC03IDN6IiBmaWxsPSIjOGE2MjM4Ii8+PC9zdmc+Cg==',
     'hero-body': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NCA1OCI+PHBhdGggZD0iTTExIDE3TDE5IDhIMzVMNDMgMTdMNDkgMjRMNDMgNTJIMTFMNSAyNFoiIGZpbGw9IiM3ZDVmM2QiIHN0cm9rZT0iIzRiMzkyNCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTIwIDhRMjcgMyAzNCA4TDMyIDE3SDIyWiIgZmlsbD0iI2Q4YzM5YyIgc3Ryb2tlPSIjNmY2MDQ5IiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
     'hero-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzOSIgaGVpZ2h0PSIzOSIgdmlld0JveD0iMCAwIDM5IDM5Ij48cGF0aCBkPSJNOCAxM1ExOSA0IDMxIDEzTDI5IDMxSDEwWiIgZmlsbD0iIzk4YTJhZCIgc3Ryb2tlPSIjMzAyNzFlIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNOCAxNUwyIDYgMTMgMTFNMzEgMTVMMzcgNiAyNiAxMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDhjMzljIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxlbGxpcHNlIGN4PSIxOS41IiBjeT0iMjIiIHJ4PSI4IiByeT0iNyIgZmlsbD0iI2Q4YzM5YyIvPjwvc3ZnPg==',
     'hero-hand': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTcgNFExMCAyIDEyIDZMMTQgNVExNyA0IDE4IDdMMTkgMTNRMTggMjAgMTEgMjFRNiAyMCA1IDE1TDQgMTBRNCA3IDcgN1oiIGZpbGw9IiNkOGMzOWMiIHN0cm9rZT0iIzZmNjA0OSIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48L3N2Zz4=',
     'foe-shield-shield': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MiIgaGVpZ2h0PSI1NCIgdmlld0JveD0iMCAwIDQyIDU0Ij48cGF0aCBkPSJNNSA1SDM3VjI5UTMzIDQ1IDIxIDUwUTkgNDUgNSAyOVoiIGZpbGw9IiM0ZjkzYWQiIHN0cm9rZT0iIzM1Njg3OCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTIxIDlWNDNNOSAyNEgzMyIgc3Ryb2tlPSIjOGJjNGQ2IiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
     'boss-hulk-plates': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTgiIGhlaWdodD0iODIiIHZpZXdCb3g9IjAgMCAxMTggODIiPjxwYXRoIGQ9Ik04IDIwTDM1IDYgNTUgMjIgODIgNyAxMTAgMjIgMTAxIDY5IDcwIDYxIDU0IDc0IDIwIDY0WiIgZmlsbD0iIzU5NjI2ZSIgc3Ryb2tlPSIjNGQ1NTYxIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjAgMjVMNDMgMTcgNTMgMzUgNzIgMTggOTggMjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk4YTJhZCIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9zdmc+',
+    'boss-worm-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3NiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDc2IDcyIj48cGF0aCBkPSJNMzggNUw1NyAxMCA2OSAyNiA2NCA1MCA1MCA2NCAyNiA2NCAxMiA1MCA3IDI3IDE5IDExWiIgZmlsbD0iIzdhOGE0ZSIgc3Ryb2tlPSIjNGQ1YTJmIiBzdHJva2Utd2lkdGg9IjUiLz48cGF0aCBkPSJNMTEgMTdMMiA1IDIyIDEyIDI4IDI3IDE5IDM0IDggMjlaIiBmaWxsPSIjYzlkMThhIiBzdHJva2U9IiM0ZDVhMmYiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik02NSAxN0w3NCA1IDU0IDEyIDQ4IDI3IDU3IDM0IDY4IDI5WiIgZmlsbD0iI2M5ZDE4YSIgc3Ryb2tlPSIjNGQ1YTJmIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMjUgMzFoOHY3aC04ek00MyAzMWg4djdoLTh6IiBmaWxsPSIjMjAyMzFhIi8+PHBhdGggZD0iTTI3IDUxUTM4IDU5IDQ5IDUxIiBmaWxsPSJub25lIiBzdHJva2U9IiM0ZDVhMmYiIHN0cm9rZS13aWR0aD0iNSIvPjwvc3ZnPgo=',
+    'boss-worm-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI1NCIgdmlld0JveD0iMCAwIDYwIDU0Ij48cGF0aCBkPSJNOSAyaDQybDcgMTQtNCAzMC0xMiA2SDE4TDYgNDYgMiAxNloiIGZpbGw9IiM3YThhNGUiIHN0cm9rZT0iIzRkNWEyZiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTEzIDZsNiA0Mk00NyA2bC02IDQyIiBmaWxsPSJub25lIiBzdHJva2U9IiNjOWQxOGEiIHN0cm9rZS13aWR0aD0iNSIvPjxwYXRoIGQ9Ik0yNCA1aDEydjQ0SDI0eiIgZmlsbD0iIzY2NzQzZiIvPjwvc3ZnPgo=',
+    'boss-worm-tail': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDQ4IDY0Ij48cGF0aCBkPSJNOCA1aDMybDYgMTQtNSAyNS0xNyAxOEw3IDQ0IDIgMTlaIiBmaWxsPSIjN2E4YTRlIiBzdHJva2U9IiM0ZDVhMmYiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik0xNCA3bDQgNDNNMzQgN2wtNCA0MyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzlkMThhIiBzdHJva2Utd2lkdGg9IjQiLz48L3N2Zz4K',
     'foe-walker-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCAyNCI+PHBhdGggZD0iTTYgNVExNCAxIDIyIDVMMjMgMTZRMTQgMjIgNSAxNloiIGZpbGw9IiNjMjU2NmIiIHN0cm9rZT0iIzhmM2E0YyIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
     'foe-walker-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MiA0NCI+PHBhdGggZD0iTTggOEgzNEwzOCAzNVEyMSA0MiA0IDM1WiIgZmlsbD0iI2MyNTY2YiIgc3Ryb2tlPSIjOGYzYTRjIiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
     'foe-walker-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNiAzNCI+PHBhdGggZD0iTTggM0gxNkwxNSAzMUg1Wk0yMCAzSDI4TDMxIDMxSDIxWiIgZmlsbD0iI2MyNTY2YiIgc3Ryb2tlPSIjOGYzYTRjIiBzdHJva2Utd2lkdGg9IjIuNSIvPjwvc3ZnPg==',
@@ -224,11 +222,43 @@ const SPR_SRC = {
     'boss-hulk-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCAzNCI+PHBhdGggZD0iTTcgMTBMMTQgM0wyMiA2TDMwIDJMNDEgMTBMMzggMjdMMjUgMzFMMTAgMjZaIiBmaWxsPSIjNTk2MjZlIiBzdHJva2U9IiM0ZDU1NjEiIHN0cm9rZS13aWR0aD0iMi44Ii8+PC9zdmc+',
     'boss-hulk-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTIgNjQiPjxwYXRoIGQ9Ik04IDIxTDIwIDhMMzQgMTJMNDQgM0w1NSAxMEw2NyAyTDc4IDEzTDk0IDhMMTA1IDIyTDk2IDM0TDEwMSA1M0w3NiA2MEw1NyA1NUwzNSA2MUwxMiA1MkwxNyAzN1oiIGZpbGw9IiM1OTYyNmUiIHN0cm9rZT0iIzRkNTU2MSIgc3Ryb2tlLXdpZHRoPSI0LjUiLz48L3N2Zz4=',
     'boss-hulk-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OCA0NiI+PHBhdGggZD0iTTEyIDVMMjkgM0wzMSAxOEwyNCA0Mkg4TDEwIDIyWk00NiAzTDY1IDZMNjggMjRMNzAgNDJINTJMNDUgMThaIiBmaWxsPSIjNTk2MjZlIiBzdHJva2U9IiM0ZDU1NjEiIHN0cm9rZS13aWR0aD0iMyIvPjwvc3ZnPg==',
+    'foe-crawler-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNCIgaGVpZ2h0PSIyMiIgdmlld0JveD0iMCAwIDM0IDIyIj48cGF0aCBkPSJNMiAxN1ExNyAyIDMyIDE3TDI2IDIwTDggMjBaIiBmaWxsPSIjNmY5YTRlIiBzdHJva2U9IiM0YzZiMzUiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'foe-crawler-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MCIgaGVpZ2h0PSIzNCIgdmlld0JveD0iMCAwIDcwIDM0Ij48cGF0aCBkPSJNMiAyOVE4IDggMzUgMTFRNjIgOCA2OCAyOUw1NCAzMkwxNiAzMloiIGZpbGw9IiM2ZjlhNGUiIHN0cm9rZT0iIzRjNmIzNSIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'foe-crawler-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MiIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDYyIDI0Ij48cGF0aCBkPSJNMyAxOUwxNSA1TDMxIDEyTDQ3IDVMNTkgMTlMMzEgMjFaIiBmaWxsPSIjNmY5YTRlIiBzdHJva2U9IiM0YzZiMzUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'foe-jumper-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMCIgdmlld0JveD0iMCAwIDMyIDMwIj48cGF0aCBkPSJNNCAyNkw4IDdMMTYgMkwyNCA3TDI4IDI2TDE2IDIxWiIgZmlsbD0iI2MwYTQ1OCIgc3Ryb2tlPSIjOGE3NDM2IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'foe-jumper-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI2MiIgdmlld0JveD0iMCAwIDQwIDYyIj48cGF0aCBkPSJNNiA1OEwxMCAxN0wyMCA0TDMwIDE3TDM0IDU4TDIwIDQ2WiIgZmlsbD0iI2MwYTQ1OCIgc3Ryb2tlPSIjOGE3NDM2IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'foe-jumper-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NiIgaGVpZ2h0PSI0NCIgdmlld0JveD0iMCAwIDQ2IDQ0Ij48cGF0aCBkPSJNNSA0MEwxMiA0TDIwIDIyTDEwIDQyTDEgMzlMMTYgMTlMMzQgNEw0MSA0MEwzNiA0MkwyOCAyMloiIGZpbGw9IiNjMGE0NTgiIHN0cm9rZT0iIzhhNzQzNiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'foe-brute-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI4IDI0Ij48cGF0aCBkPSJNNCAyMEw3IDdMMTQgM0wyMSA3TDI0IDIwWiIgZmlsbD0iI2EzNWEzYyIgc3Ryb2tlPSIjNmYzYTI2IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'foe-brute-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4NiIgaGVpZ2h0PSI1NCIgdmlld0JveD0iMCAwIDg2IDU0Ij48cGF0aCBkPSJNMyA1MEwzIDE3TDMzIDVMNDMgMTJMNTMgNUw4MyAxN0w4MyA1MEw0MyA0MVoiIGZpbGw9IiNhMzVhM2MiIHN0cm9rZT0iIzZmM2EyNiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'foe-brute-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI0MiIgdmlld0JveD0iMCAwIDcyIDQyIj48cGF0aCBkPSJNNyA0TDMxIDIxTDIyIDM5TDYgMzdMMjcgMTdMNjUgNEw0MSAyMUw1MCAzOUw2NiAzN0w0NSAxN1oiIGZpbGw9IiNhMzVhM2MiIHN0cm9rZT0iIzZmM2EyNiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'foe-spike-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NiIgaGVpZ2h0PSI0NiIgdmlld0JveD0iMCAwIDQ2IDQ2Ij48cGF0aCBkPSJNMjMgMkwyOCAxMkwzOSA3TDM2IDE4TDQ1IDIzTDM2IDI4TDQwIDQwTDI4IDM1TDIzIDQ1TDE4IDM1TDYgNDBMMTAgMjhMMSAyM0wxMCAxOEw3IDdMMTggMTJaIiBmaWxsPSIjNGE1ZmE4IiBzdHJva2U9IiMzMzQzN2EiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'foe-spike-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDUwIDQ4Ij48cGF0aCBkPSJNMiAyNEwxMSAxOEw1IDdMMTggMTJMMjUgMkwzMiAxMkw0NSA3TDM5IDE4TDQ4IDI0TDM4IDI5TDQzIDQzTDI1IDM2TDcgNDNMMTIgMjlaIiBmaWxsPSIjNGE1ZmE4IiBzdHJva2U9IiMzMzQzN2EiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'foe-spike-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSIzOCIgdmlld0JveD0iMCAwIDQ4IDM4Ij48cGF0aCBkPSJNNyA0TDE5IDE5TDEwIDM1TDYgMzNMMTUgMTVMNDEgNEwyOSAxOUwzOCAzNUw0MiAzM0wzMyAxNVoiIGZpbGw9IiM0YTVmYTgiIHN0cm9rZT0iIzMzNDM3YSIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'foe-husk-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNCIgaGVpZ2h0PSIzMCIgdmlld0JveD0iMCAwIDM0IDMwIj48cGF0aCBkPSJNNCAyNkw4IDdMMTcgMkwyNiA3TDMwIDI2TDIyIDIyTDE3IDEyTDEyIDIyWiIgZmlsbD0iIzNmYTA4ZCIgc3Ryb2tlPSIjMmE2ZjYxIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'foe-husk-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI1OCIgdmlld0JveD0iMCAwIDQwIDU4Ij48cGF0aCBkPSJNNiA1NEwxMCA4TDIwIDJMMzAgOEwzNCA1NEwyNiA1MEwyMCAxN0wxNCA1MFoiIGZpbGw9IiMzZmEwOGQiIHN0cm9rZT0iIzJhNmY2MSIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'foe-husk-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNiIgaGVpZ2h0PSI0NiIgdmlld0JveD0iMCAwIDM2IDQ2Ij48cGF0aCBkPSJNNyA0TDEzIDIzTDQgNDNMNiA0MUw5IDE5TDI5IDRMMjMgMjNMMzIgNDNMMzAgNDFMMjcgMTlaIiBmaWxsPSIjM2ZhMDhkIiBzdHJva2U9IiMyYTZmNjEiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'weapon-flail-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDMwIDE4Ij48ZWxsaXBzZSBjeD0iMTUiIGN5PSI5IiByeD0iMTEiIHJ5PSI1IiBmaWxsPSJub25lIiBzdHJva2U9IiM5NmJlZDciIHN0cm9rZS13aWR0aD0iNCIvPjwvc3ZnPg==',
+    'weapon-flail-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSIgdmlld0JveD0iMCAwIDQ1IDQ1Ij48cGF0aCBkPSJNMjIgMkwyNyAxMSAzOCA3IDM0IDE4IDQ0IDIzIDM0IDI4IDM4IDM5IDI3IDM1IDIyIDQ0IDE3IDM1IDYgMzkgMTAgMjggMSAyMyAxMCAxOCA2IDcgMTcgMTFaIiBmaWxsPSIjOTZiZWQ3IiBzdHJva2U9IiMzMzRiNWIiIHN0cm9rZS13aWR0aD0iMyIvPjwvc3ZnPg==',
+    'weapon-axe-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNiIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDM2IDE4Ij48cmVjdCB4PSIzIiB5PSI2IiB3aWR0aD0iMzAiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IiM3ZDVmM2QiIHN0cm9rZT0iIzMwMjcxZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
+    'weapon-axe-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NiIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDY2IDYwIj48cGF0aCBkPSJNOCA5UTQ1IDQgNTkgMzBRNDUgNTYgOCA1MUwyMiAzMFoiIGZpbGw9IiNjZGFhNzMiIHN0cm9rZT0iIzVmNGEyZSIgc3Ryb2tlLXdpZHRoPSI1Ii8+PC9zdmc+',
+    'weapon-sword-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMyIgaGVpZ2h0PSIxNSIgdmlld0JveD0iMCAwIDMzIDE1Ij48cGF0aCBkPSJNMyA3SDMwTTE2IDJWMTMiIHN0cm9rZT0iI2JlYzhkNCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=',
+    'weapon-sword-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNCIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDM0IDk2Ij48cGF0aCBkPSJNMTcgMkwyNyAyMSAyMiA3MSAxNyA4MiAxMiA3MSA3IDIxWiIgZmlsbD0iI2JlYzhkNCIgc3Ryb2tlPSIjNTk2MjZlIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNMTcgNXY3MEwxMSAyMloiIGZpbGw9IiNlN2VkZjQiLz48cGF0aCBkPSJNNCA3OGgyNnY3SDR6TTEzIDg0aDh2OWgtOHoiIGZpbGw9IiM4YTYyMzgiIHN0cm9rZT0iIzVhNDAyNiIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTEwIDkyaDE0bC03IDN6IiBmaWxsPSIjOGE2MjM4Ii8+PC9zdmc+Cg==',
     'weapon-spear-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDMwIDE2Ij48cGF0aCBkPSJNMCA0aDMwdjhIMHoiIGZpbGw9IiM3YTVhMzQiIHN0cm9rZT0iIzRkM2EyNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTAgNS41aDMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNhMTdhNDkiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPgo=',
     'weapon-spear-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSI4NCIgdmlld0JveD0iMCAwIDMwIDg0Ij48cGF0aCBkPSJNMTUgMkwyNiAzMSAyMCA2OSAxNSA4MiAxMCA2OSA0IDMxWiIgZmlsbD0iI2M4Y2RkNiIgc3Ryb2tlPSIjNTk2MjZlIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNMTUgNHY3MEw4IDMxWiIgZmlsbD0iI2U1ZTllZiIvPjxwYXRoIGQ9Ik03IDcwaDE2djhIN3oiIGZpbGw9IiM3YTVhMzQiIHN0cm9rZT0iIzRkM2EyNCIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+Cg==',
-    'boss-worm-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3NiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDc2IDcyIj48cGF0aCBkPSJNMzggNUw1NyAxMCA2OSAyNiA2NCA1MCA1MCA2NCAyNiA2NCAxMiA1MCA3IDI3IDE5IDExWiIgZmlsbD0iIzdhOGE0ZSIgc3Ryb2tlPSIjNGQ1YTJmIiBzdHJva2Utd2lkdGg9IjUiLz48cGF0aCBkPSJNMTEgMTdMMiA1IDIyIDEyIDI4IDI3IDE5IDM0IDggMjlaIiBmaWxsPSIjYzlkMThhIiBzdHJva2U9IiM0ZDVhMmYiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik02NSAxN0w3NCA1IDU0IDEyIDQ4IDI3IDU3IDM0IDY4IDI5WiIgZmlsbD0iI2M5ZDE4YSIgc3Ryb2tlPSIjNGQ1YTJmIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMjUgMzFoOHY3aC04ek00MyAzMWg4djdoLTh6IiBmaWxsPSIjMjAyMzFhIi8+PHBhdGggZD0iTTI3IDUxUTM4IDU5IDQ5IDUxIiBmaWxsPSJub25lIiBzdHJva2U9IiM0ZDVhMmYiIHN0cm9rZS13aWR0aD0iNSIvPjwvc3ZnPgo=',
-    'boss-worm-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI1NCIgdmlld0JveD0iMCAwIDYwIDU0Ij48cGF0aCBkPSJNOSAyaDQybDcgMTQtNCAzMC0xMiA2SDE4TDYgNDYgMiAxNloiIGZpbGw9IiM3YThhNGUiIHN0cm9rZT0iIzRkNWEyZiIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTEzIDZsNiA0Mk00NyA2bC02IDQyIiBmaWxsPSJub25lIiBzdHJva2U9IiNjOWQxOGEiIHN0cm9rZS13aWR0aD0iNSIvPjxwYXRoIGQ9Ik0yNCA1aDEydjQ0SDI0eiIgZmlsbD0iIzY2NzQzZiIvPjwvc3ZnPgo=',
-    'boss-worm-tail': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI2NCIgdmlld0JveD0iMCAwIDQ4IDY0Ij48cGF0aCBkPSJNOCA1aDMybDYgMTQtNSAyNS0xNyAxOEw3IDQ0IDIgMTlaIiBmaWxsPSIjN2E4YTRlIiBzdHJva2U9IiM0ZDVhMmYiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik0xNCA3bDQgNDNNMzQgN2wtNCA0MyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzlkMThhIiBzdHJva2Utd2lkdGg9IjQiLz48L3N2Zz4K',
+    'weapon-halberd-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDMwIDE2Ij48cGF0aCBkPSJNMyAxMkwyNyA0TDI5IDhMNiAxNFoiIGZpbGw9IiM3YTVhMzQiIHN0cm9rZT0iIzNlMmQxYSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'weapon-halberd-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI4OCIgdmlld0JveD0iMCAwIDY0IDg4Ij48cGF0aCBkPSJNMjYgODRMMjUgNDhMNyAzOEwyNCAzMUwxOCA3TDM3IDIzTDU1IDEwTDQ3IDM3TDYxIDQ4TDQwIDUwTDM5IDg0WiIgZmlsbD0iI2JlYzhkNCIgc3Ryb2tlPSIjNjI2Yjc0IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'weapon-club-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDMwIDIwIj48cGF0aCBkPSJNMyAxNkwyNyA0TDI5IDhMNiAxOFoiIGZpbGw9IiM3YTVhMzQiIHN0cm9rZT0iIzNlMmQxYSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'weapon-club-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NiIgaGVpZ2h0PSI3MCIgdmlld0JveD0iMCAwIDQ2IDcwIj48cGF0aCBkPSJNOCA2NlEyIDUzIDEwIDQyUTIgMjkgMTMgMjBRMTIgNyAyNCA0UTM5IDEwIDM0IDIzUTQ1IDM0IDM1IDQ1UTQyIDU4IDMwIDY2UTE5IDczIDggNjZaIiBmaWxsPSIjY2RhYTczIiBzdHJva2U9IiM2MjZiNzQiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'weapon-pick-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyOCIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI4IDE0Ij48cGF0aCBkPSJNMyAxMEwyNSA0TDI3IDhMNiAxMloiIGZpbGw9IiM3YTVhMzQiIHN0cm9rZT0iIzNlMmQxYSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'weapon-pick-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NCIgaGVpZ2h0PSI2MiIgdmlld0JveD0iMCAwIDU0IDYyIj48cGF0aCBkPSJNMjUgNThMMjUgMzBMNCAyM0wyNSAxNUw0OCAzTDQyIDI0TDUwIDMyTDMyIDMxTDMyIDU4WiIgZmlsbD0iI2JlYzhkNCIgc3Ryb2tlPSIjNjI2Yjc0IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'weapon-mace-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDMwIDE4Ij48cGF0aCBkPSJNMiA3UTE1IDEgMjggMTFRMTUgMTcgMiA3WiIgZmlsbD0iIzhiOTE5OCIgc3Ryb2tlPSIjNTU1YjYxIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'weapon-mace-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48cGF0aCBkPSJNMjQgM0wyOSAxNEw0MiA5TDM2IDIxTDQ2IDI3TDMzIDMxTDM0IDQ1TDI0IDM2TDEzIDQ1TDE0IDMxTDIgMjVMMTQgMjBMOSA4TDIxIDE0WiIgZmlsbD0iI2JlYzhkNCIgc3Ryb2tlPSIjNjI2Yjc0IiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'weapon-sickle-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNiIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI2IDE0Ij48cGF0aCBkPSJNMiA1UTEzIDEgMjQgOVExMyAxMyAyIDVaIiBmaWxsPSIjOGI5MTk4IiBzdHJva2U9IiM1NTViNjEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'weapon-sickle-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MiIgaGVpZ2h0PSI1NCIgdmlld0JveD0iMCAwIDYyIDU0Ij48cGF0aCBkPSJNNSA0NVExOCA3IDU1IDVRNDAgMTcgMzQgMzZRMjUgNDkgNSA0NVoiIGZpbGw9IiNiZWM4ZDQiIHN0cm9rZT0iIzYyNmI3NCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'weapon-hook-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNiIgaGVpZ2h0PSIxNCIgdmlld0JveD0iMCAwIDI2IDE0Ij48cGF0aCBkPSJNMiA1UTEzIDEgMjQgOVExMyAxMyAyIDVaIiBmaWxsPSIjOGI5MTk4IiBzdHJva2U9IiM1NTViNjEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
+    'weapon-hook-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NCIgaGVpZ2h0PSI2NiIgdmlld0JveD0iMCAwIDQ0IDY2Ij48cGF0aCBkPSJNOCA0TDMxIDZMMjUgMjBMNDAgMjhRMzkgNTUgMTcgNjJRMjggNDcgMjUgMzZMOSAzMVoiIGZpbGw9IiNiZWM4ZDQiIHN0cm9rZT0iIzYyNmI3NCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'weapon-hammer-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDMyIDIwIj48cGF0aCBkPSJNMiA4UTE2IDEgMzAgMTJRMTYgMTkgMiA4WiIgZmlsbD0iIzhiOTE5OCIgc3Ryb2tlPSIjNTU1YjYxIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'weapon-hammer-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1OCIgaGVpZ2h0PSI1MiIgdmlld0JveD0iMCAwIDU4IDUyIj48cGF0aCBkPSJNNSA4TDQ1IDRMNTQgMTlMNDYgMzVMMzIgMzFMMjkgNDlMMTggNDdMMTkgMzBMNiAzMloiIGZpbGw9IiNiZWM4ZDQiIHN0cm9rZT0iIzYyNmI3NCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
 };
 const SPR = {};
 for (const k in SPR_SRC) {
@@ -239,19 +269,46 @@ for (const k in SPR_SRC) {
 const ready = (im) => im && im.complete && im.naturalWidth > 0;
 
 const ICON = {
+    'armor': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M4 3L12 1L20 3L19 15L12 23L5 15Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'axe': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 20L17 6M13 4Q20 3 22 9Q18 13 12 11Z\"/></g></svg>",
+    'back': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M3 12L12 3V8H21V16H12V21Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'boom': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M12 1L15 7L22 4L18 11L23 15L16 16L17 23L11 18L6 23L7 16L1 14L6 10L2 4L9 7Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'chain': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M3 8Q3 3 8 3H12V7H8Q7 7 7 8T8 9H12V13H8Q3 13 3 8ZM12 11H16Q21 11 21 16T16 21H12V17H16Q17 17 17 16T16 15H12Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'club': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M8 22L5 19L14 10Q11 4 16 2Q22 5 18 10Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'crit': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M12 1L15 8L23 9L17 14L19 22L12 18L5 22L7 14L1 9L9 8Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'dash': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7H14M3 12H19M3 17H14\"/></g></svg>",
     'flail': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20L10 14M11 13L15 9M17 7L20 4\"/><circle cx=\"20\" cy=\"4\" r=\"3\"/></g></svg>",
     'gear': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2L14 5 18 4 19 8 22 10 20 14 21 18 17 19 14 22 11 20 7 21 5 17 2 14 4 10 3 6 7 5 9 2Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\" fill=\"none\"/></g></svg>",
+    'halberd': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M11 23V9L3 7L10 3L9 1L15 5L22 2L18 9L14 10V23Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'hammer': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M3 4H17L22 9L17 14H14V23H9V14H3Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'heal': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M9 1H15V9H23V15H15V23H9V15H1V9H9Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'heart': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21L3 12Q0 5 6 3Q10 2 12 6Q14 2 18 3Q24 5 21 12Z\"/></g></svg>",
+    'hook': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M7 2H17V7H12V15Q12 19 16 19Q20 19 20 14H23Q23 23 15 23Q7 23 7 15Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'longer': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12H21M17 8L21 12 17 16M7 8L3 12 7 16\"/></g></svg>",
+    'mace': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M12 1L15 6L21 4L19 10L24 13L18 16L19 22L13 19L9 23L7 17L1 16L5 11L2 6L8 7Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'magnet': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M4 2H9V13Q9 18 12 18T15 13V2H20V13Q20 23 12 23T4 13Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'pause': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M5 3H10V21H5ZM14 3H19V21H14Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'pick': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M11 23V10L2 8L12 3L22 7L15 10V23Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'play': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M5 2L22 12L5 22Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'rage': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M3 20L6 8L11 13L15 3L21 20L13 16L8 22Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'reach': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M2 11H15L11 7L14 4L22 12L14 20L11 17L15 13H2Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'record': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M3 3H21V21H3ZM8 8H16V16H8Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'retry': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M4 8L2 3L9 4L7 7Q12 2 18 6Q24 11 20 18Q16 24 9 20L12 16Q16 19 18 15Q20 11 16 8Q11 5 7 10Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'second-wind': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M2 8Q8 2 14 8L11 11Q8 7 4 11ZM5 16Q12 9 22 14L20 18Q13 14 8 20Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'share': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M4 10L16 2V7Q22 8 22 17Q18 12 16 13V19Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'sharpen': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 18L19 3 21 5 6 21Z\"/></g></svg>",
+    'sickle': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M3 20Q5 4 22 3Q13 10 12 19L8 23Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'skull': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M4 11Q4 2 12 2T20 11L18 18H15V22H9V18H6Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'slick': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2Q4 11 5 16A7 7 0 0 0 19 16Q20 11 12 2Z\"/></g></svg>",
+    'slow': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M12 2A10 10 0 1 0 22 12H18A6 6 0 1 1 12 6ZM11 6H14V13L18 16L16 19L11 15Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'sound-off': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10H7L12 5V19L7 14H3ZM16 9L22 15M22 9L16 15\"/></g></svg>",
     'sound-on': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10H7L12 5V19L7 14H3ZM15 9Q19 12 15 15M18 6Q24 12 18 18\"/></g></svg>",
     'spear': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M12 1l4 7-2.4 1.2v10.3H16V23H8v-3.5h2.4V9.2L8 8z\" fill=\"currentColor\"/></svg>",
     'spikes': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2L15 8 22 6 18 12 22 18 15 16 12 22 9 16 2 18 6 12 2 6 9 8Z\"/></g></svg>",
     'sword': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20L18 6 21 3M8 16L4 12\"/></g></svg>",
+    'thorns': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M12 1L15 8L22 5L18 12L23 18L15 17L12 23L9 17L1 18L6 12L2 5L9 8Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'vampire': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M3 4L8 8L12 3L16 8L21 4L18 20L14 15L12 22L10 15L6 20Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
+    'wave': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><path d=\"M1 12Q5 5 9 12T17 12T23 12V18Q19 11 15 18T7 18T1 18Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>",
     'weight': "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 8H17L20 21H4ZM9 8A3 3 0 0 1 15 8\"/></g></svg>",
 };
 
@@ -789,6 +846,11 @@ const KINDS = {
     толстяк:   { hp: 48, walk: 31, r: 15, link: 15, damp: 0.980, mass: 2.6, armor: 0,   color: '#9a63c4', dark: '#6d4590' },
     щитоносец: { hp: 26, walk: 44, r: 11, link: 11, damp: 0.970, mass: 1.5, armor: 700, color: '#4f93ad', dark: '#356878' },
     туша:      { hp: 200, walk: 34, r: 26, link: 24, damp: 0.975, mass: 4.5, armor: 1300, color: '#59626e', dark: '#4d5561' },
+    ползун:    { hp: 30, walk: 40, r: 13, link: 9,  damp: 0.985, mass: 1.8, armor: 0, color: '#6f9a4e', dark: '#4c6b35' },
+    прыгун:    { hp: 14, walk: 78, r: 9,  link: 12, damp: 0.940, mass: 0.45, armor: 0, color: '#c0a458', dark: '#8a7436' },
+    верзила:   { hp: 60, walk: 36, r: 17, link: 14, damp: 0.982, mass: 3.0, armor: 0, color: '#a35a3c', dark: '#6f3a26' },
+    колючий:   { hp: 20, walk: 58, r: 10, link: 10, damp: 0.960, mass: 0.9, armor: 0, color: '#4a5fa8', dark: '#33437a' },
+    оболочка:  { hp: 24, walk: 50, r: 11, link: 13, damp: 0.955, mass: 0.7, armor: 0, color: '#3fa08d', dark: '#2a6f61' },
     червь:     { hp: 260, walk: 62, r: 19, link: 25, damp: 0.972, mass: 3.2, armor: 0,    color: '#7a8a4e', dark: '#4d5a2f', chain: 11 },
 };
 
@@ -804,12 +866,24 @@ const THEMES = [
     ['тяжёлые', { needs: 'толстяк',   size: 0.55, mix: { толстяк: 1, ходок: 0.35 } }],
     ['стена',   { needs: 'щитоносец', size: 0.8, mix: { щитоносец: 1, ходок: 0.35 } }],
     ['вразнос', { needs: 'толстяк',   size: 1.0, mix: { ходок: 1, бегун: 0.9, толстяк: 0.5, щитоносец: 0.4 } }],
+    ['ползком',  { needs: 'ползун',    size: 1.3, mix: { ползун: 1, ходок: 0.3 } }],
+    ['иглы',     { needs: 'колючий',   size: 0.9, mix: { колючий: 1, ходок: 0.3 } }],
+    ['стая',     { needs: 'прыгун',    size: 1.4, mix: { прыгун: 1, бегун: 0.5 } }],
+    ['громилы',  { needs: 'верзила',   size: 0.5, mix: { верзила: 1, толстяк: 0.4 } }],
+    ['пустые',   { needs: 'оболочка',  size: 1.0, mix: { оболочка: 1, бегун: 0.4 } }],
 ];
 
 /** Когда вид впервые выходит на арену. */
-const UNLOCK = { ходок: 1, бегун: 4, толстяк: 6, щитоносец: 8 };
+const UNLOCK = {
+    ходок: 1, бегун: 3, ползун: 4, толстяк: 6, колючий: 7,
+    прыгун: 8, щитоносец: 9, верзила: 11, оболочка: 13,
+};
 
 function pickTheme(w, avoid) {
+    // Волна, на которой вид открывается, целиком отдаётся ему: иначе новый
+    // враг теряется в толпе и игрок его не замечает.
+    const debut = THEMES.find(([, t]) => t.needs && UNLOCK[t.needs] === w);
+    if (debut) return debut;
     const ok = THEMES.filter(([name, t]) =>
         (!t.needs || w >= UNLOCK[t.needs]) && name !== avoid);
     return ok.length ? ok[Math.floor(rnd(0, ok.length))] : THEMES[0];
@@ -985,6 +1059,34 @@ const WEAPONS = [
           tipWeight: 0.1, bend: 9,
           sprite: 'spear', haft: '#7a5a34', haftDark: '#43301a',
           bladeW: 12, bladeRGB: [200, 205, 214] }],
+    ['Алебарда', 'жёсткая и длинная: рубит широко, но рука тяжёлая',
+        { len: 8, seg: 13, rigid: true, thrust: false, bladeMul: 4.6, headSpeed: 860,
+          tipWeight: 0.1, bend: 9, sprite: 'halberd',
+          haft: '#7a5a34', haftDark: '#43301a', bladeW: 20, bladeRGB: [196, 204, 214] }],
+    ['Дубина', 'короткая и тупая: медленная рука, зато каждый удар валит',
+        { len: 4, seg: 13, rigid: true, thrust: false, bladeMul: 5.4, headSpeed: 760,
+          tipWeight: 0.1, bend: 9, sprite: 'club',
+          haft: '#6b4a28', haftDark: '#3a2716', bladeW: 22, bladeRGB: [198, 168, 118] }],
+    ['Клевец', 'жёсткий клюв: колет узко и глубоко, рука самая быстрая',
+        { len: 5, seg: 12, rigid: true, thrust: true, bladeMul: 5.0, headSpeed: 1100,
+          tipWeight: 0.1, bend: 9, sprite: 'pick',
+          haft: '#6b4a28', haftDark: '#3a2716', bladeW: 14, bladeRGB: [186, 196, 208] }],
+    ['Кистень', 'гибкий и тяжёлый: разгоняется медленнее цепа, но таскает тебя сильнее',
+        { len: 8, seg: 11, rigid: false, tipWeight: 0.45, bend: 3, bladeMul: 2.6, headSpeed: 880,
+          sprite: 'mace', haft: '#8b9198', haftDark: '#3b4046',
+          bladeW: 16, bladeRGB: [176, 186, 198] }],
+    ['Серп', 'гибкий и широкий: цепляет сразу нескольких, но бьёт слабее',
+        { len: 9, seg: 11, rigid: false, tipWeight: 0.28, bend: 2, bladeMul: 2.3, headSpeed: 950,
+          sprite: 'sickle', haft: '#8b9198', haftDark: '#3b4046',
+          bladeW: 18, bladeRGB: [206, 212, 220] }],
+    ['Гарпун', 'самая длинная цепь: достаёт через полэкрана и слушается хуже всего',
+        { len: 11, seg: 11, rigid: false, tipWeight: 0.25, bend: 2, bladeMul: 2.1, headSpeed: 900,
+          sprite: 'hook', haft: '#8b9198', haftDark: '#3b4046',
+          bladeW: 14, bladeRGB: [190, 200, 212] }],
+    ['Молот', 'гибкий, но короткий и очень тяжёлый: разгона мало, удар страшный',
+        { len: 6, seg: 12, rigid: false, tipWeight: 0.55, bend: 5, bladeMul: 3.8, headSpeed: 800,
+          sprite: 'hammer', haft: '#8b9198', haftDark: '#3b4046',
+          bladeW: 20, bladeRGB: [186, 192, 200] }],
 ];
 
 const RULES = '<ul>' +
@@ -1153,6 +1255,8 @@ const boneAng = (a, b) => Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
 const KIND_SPR = {
     'ходок': 'foe-walker', 'бегун': 'foe-runner', 'толстяк': 'foe-fat',
     'щитоносец': 'foe-shield', 'туша': 'boss-hulk',
+    'ползун': 'foe-crawler', 'прыгун': 'foe-jumper', 'верзила': 'foe-brute',
+    'колючий': 'foe-spike', 'оболочка': 'foe-husk',
 };
 
 /**
@@ -1367,7 +1471,7 @@ function draw() {
     ctx.beginPath(); ctx.moveTo(pts[pts.length - BLADE - 1].x, pts[pts.length - BLADE - 1].y);
     for (let i = pts.length - BLADE; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
     const c = S.bladeRGB;
-    const blade = SPR['weapon-' + S.sprite + '-blade'] || SPR['weapon-flail-head'];
+    const blade = SPR['weapon-' + S.sprite + '-blade'] || SPR['weapon-' + S.sprite + '-head'];
     if (ready(blade)) {
         const a = pts[pts.length - 1], b = pts[Math.max(0, pts.length - 2)];
         const ang = Math.atan2(a.y - b.y, a.x - b.x) + Math.PI / 2;
