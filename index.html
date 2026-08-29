@@ -70,9 +70,23 @@
   #go { align-items: center !important; font-size: 16px; font-weight: 600; color: #eafff0;
         background: #2f6b4a; border-color: #3d8a60; padding: 13px !important; }
 
+  .game-home-menu {
+    position: fixed; z-index: 1000; display: block;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    padding: 10px 12px; border: 1px solid #76ff9f; background: #0b1010f2; color: #f7f1ff;
+    font: 700 10px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em;
+    text-align: center; text-decoration: none; white-space: nowrap;
+    box-shadow: 0 0 14px #76ff9f20;
+  }
+  .game-home-menu:hover, .game-home-menu:focus-visible {
+    background: #153725; color: #fff; outline: 2px solid #bc70ff; outline-offset: 3px;
+  }
+
   #panel.off { display: none; }
   #gear {
-    position: absolute; right: 8px; top: 8px; z-index: 6;
+    position: absolute; right: 10px; z-index: 6;
+    top: calc(56px + max(10px, env(safe-area-inset-top)));   /* под кнопкой сайта */
     width: 34px; height: 34px; padding: 0; font-size: 15px; line-height: 34px;
     background: #161c24cc; border: 1px solid #263140; border-radius: 9px;
   }
@@ -81,6 +95,8 @@
 </head>
 <body>
 <canvas id="c"></canvas>
+
+<a class="game-home-menu" href="/" aria-label="Вернуться на главную aka-gst.ru">⌂ НА ГЛАВНУЮ</a>
 
 <div id="hud">
   <div><span class="dim">волна</span> <b id="wv">1</b> <span class="dim" id="th"></span> <span class="dim">· счёт</span> <b id="sc">0</b></div>
