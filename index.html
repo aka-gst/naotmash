@@ -194,14 +194,34 @@ const BIOMES = [
 
 /** Спрайты и текстуры вшиты в файл: подгружать их извне игре запрещено. */
 const SPR_SRC = {
-    'prop-rock': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTE0IiBoZWlnaHQ9IjExNCIgdmlld0JveD0iMCAwIDExNCAxMTQiPjxwYXRoIGQ9Ik0xNiAyOEw0OSA4IDkxIDE4IDEwNyA1NSA4OSA5OCA0NCAxMDYgOSA3OFoiIGZpbGw9IiM1OTYyNmUiIHN0cm9rZT0iIzMwMzYzZCIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTMxIDMxTDU0IDIwIDgwIDMwIDkxIDU1IDc1IDc5IDQzIDg2IDI0IDY3WiIgZmlsbD0iIzZkNzY4MSIvPjwvc3ZnPg==',
-    'pickup-soul': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjciIGhlaWdodD0iMjciIHZpZXdCb3g9IjAgMCAyNyAyNyI+PHBhdGggZD0iTTE0IDJRMjUgOSAxOCAxN1ExNiAyMCAyMSAyNVE4IDI1IDUgMTdRMiA4IDE0IDJaIiBmaWxsPSIjOGVmMmIwIiBzdHJva2U9IiMzYjhiNjAiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==',
-    'weapon-flail-link': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAzMCAxOCI+PGVsbGlwc2UgY3g9IjE1IiBjeT0iOSIgcng9IjExIiByeT0iNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTZiZWQ3IiBzdHJva2Utd2lkdGg9IjQiLz48L3N2Zz4=',
-    'weapon-flail-head': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDUiIGhlaWdodD0iNDUiIHZpZXdCb3g9IjAgMCA0NSA0NSI+PHBhdGggZD0iTTIyIDJMMjcgMTEgMzggNyAzNCAxOCA0NCAyMyAzNCAyOCAzOCAzOSAyNyAzNSAyMiA0NCAxNyAzNSA2IDM5IDEwIDI4IDEgMjMgMTAgMTggNiA3IDE3IDExWiIgZmlsbD0iIzk2YmVkNyIgc3Ryb2tlPSIjMzM0YjViIiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
-    'weapon-axe-haft': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAzNiAxOCI+PHJlY3QgeD0iMyIgeT0iNiIgd2lkdGg9IjMwIiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjN2Q1ZjNkIiBzdHJva2U9IiMzMDI3MWUiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==',
-    'weapon-axe-blade': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2NiA2MCI+PHBhdGggZD0iTTggOVE0NSA0IDU5IDMwUTQ1IDU2IDggNTFMMjIgMzBaIiBmaWxsPSIjY2RhYTczIiBzdHJva2U9IiM1ZjRhMmUiIHN0cm9rZS13aWR0aD0iNSIvPjwvc3ZnPg==',
-    'weapon-sword-haft': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzMiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAzMyAxNSI+PHBhdGggZD0iTTMgN0gzME0xNiAyVjEzIiBzdHJva2U9IiNiZWM4ZDQiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+',
-    'weapon-sword-blade': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTAiIGhlaWdodD0iMzMiIHZpZXdCb3g9IjAgMCA5MCAzMyI+PHBhdGggZD0iTTQgMTZMNzIgNSA4NyAxNiA3MiAyOFoiIGZpbGw9IiNiZWM4ZDQiIHN0cm9rZT0iIzU5NjI2ZSIgc3Ryb2tlLXdpZHRoPSIzIi8+PC9zdmc+',
+    'prop-rock': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTQiIGhlaWdodD0iMTE0IiB2aWV3Qm94PSIwIDAgMTE0IDExNCI+PHBhdGggZD0iTTE2IDI4TDQ5IDggOTEgMTggMTA3IDU1IDg5IDk4IDQ0IDEwNiA5IDc4WiIgZmlsbD0iIzU5NjI2ZSIgc3Ryb2tlPSIjMzAzNjNkIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMzEgMzFMNTQgMjAgODAgMzAgOTEgNTUgNzUgNzkgNDMgODYgMjQgNjdaIiBmaWxsPSIjNmQ3NjgxIi8+PC9zdmc+',
+    'pickup-soul': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIyNyIgdmlld0JveD0iMCAwIDI3IDI3Ij48cGF0aCBkPSJNMTQgMlEyNSA5IDE4IDE3UTE2IDIwIDIxIDI1UTggMjUgNSAxN1EyIDggMTQgMloiIGZpbGw9IiM4ZWYyYjAiIHN0cm9rZT0iIzNiOGI2MCIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
+    'weapon-flail-link': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDMwIDE4Ij48ZWxsaXBzZSBjeD0iMTUiIGN5PSI5IiByeD0iMTEiIHJ5PSI1IiBmaWxsPSJub25lIiBzdHJva2U9IiM5NmJlZDciIHN0cm9rZS13aWR0aD0iNCIvPjwvc3ZnPg==',
+    'weapon-flail-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSIgdmlld0JveD0iMCAwIDQ1IDQ1Ij48cGF0aCBkPSJNMjIgMkwyNyAxMSAzOCA3IDM0IDE4IDQ0IDIzIDM0IDI4IDM4IDM5IDI3IDM1IDIyIDQ0IDE3IDM1IDYgMzkgMTAgMjggMSAyMyAxMCAxOCA2IDcgMTcgMTFaIiBmaWxsPSIjOTZiZWQ3IiBzdHJva2U9IiMzMzRiNWIiIHN0cm9rZS13aWR0aD0iMyIvPjwvc3ZnPg==',
+    'weapon-axe-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNiIgaGVpZ2h0PSIxOCIgdmlld0JveD0iMCAwIDM2IDE4Ij48cmVjdCB4PSIzIiB5PSI2IiB3aWR0aD0iMzAiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IiM3ZDVmM2QiIHN0cm9rZT0iIzMwMjcxZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
+    'weapon-axe-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NiIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDY2IDYwIj48cGF0aCBkPSJNOCA5UTQ1IDQgNTkgMzBRNDUgNTYgOCA1MUwyMiAzMFoiIGZpbGw9IiNjZGFhNzMiIHN0cm9rZT0iIzVmNGEyZSIgc3Ryb2tlLXdpZHRoPSI1Ii8+PC9zdmc+',
+    'weapon-sword-haft': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMyIgaGVpZ2h0PSIxNSIgdmlld0JveD0iMCAwIDMzIDE1Ij48cGF0aCBkPSJNMyA3SDMwTTE2IDJWMTMiIHN0cm9rZT0iI2JlYzhkNCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=',
+    'weapon-sword-blade': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5MCIgaGVpZ2h0PSIzMyIgdmlld0JveD0iMCAwIDkwIDMzIj48cGF0aCBkPSJNNCAxNkw3MiA1IDg3IDE2IDcyIDI4WiIgZmlsbD0iI2JlYzhkNCIgc3Ryb2tlPSIjNTk2MjZlIiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
+    'hero-body': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NCA1OCI+PHBhdGggZD0iTTExIDE3TDE5IDhIMzVMNDMgMTdMNDkgMjRMNDMgNTJIMTFMNSAyNFoiIGZpbGw9IiM3ZDVmM2QiIHN0cm9rZT0iIzRiMzkyNCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTIwIDhRMjcgMyAzNCA4TDMyIDE3SDIyWiIgZmlsbD0iI2Q4YzM5YyIgc3Ryb2tlPSIjNmY2MDQ5IiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
+    'hero-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzOSIgaGVpZ2h0PSIzOSIgdmlld0JveD0iMCAwIDM5IDM5Ij48cGF0aCBkPSJNOCAxM1ExOSA0IDMxIDEzTDI5IDMxSDEwWiIgZmlsbD0iIzk4YTJhZCIgc3Ryb2tlPSIjMzAyNzFlIiBzdHJva2Utd2lkdGg9IjMiLz48cGF0aCBkPSJNOCAxNUwyIDYgMTMgMTFNMzEgMTVMMzcgNiAyNiAxMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDhjMzljIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxlbGxpcHNlIGN4PSIxOS41IiBjeT0iMjIiIHJ4PSI4IiByeT0iNyIgZmlsbD0iI2Q4YzM5YyIvPjwvc3ZnPg==',
+    'hero-hand': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTcgNFExMCAyIDEyIDZMMTQgNVExNyA0IDE4IDdMMTkgMTNRMTggMjAgMTEgMjFRNiAyMCA1IDE1TDQgMTBRNCA3IDcgN1oiIGZpbGw9IiNkOGMzOWMiIHN0cm9rZT0iIzZmNjA0OSIgc3Ryb2tlLXdpZHRoPSIxLjgiLz48L3N2Zz4=',
+    'foe-shield-shield': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MiIgaGVpZ2h0PSI1NCIgdmlld0JveD0iMCAwIDQyIDU0Ij48cGF0aCBkPSJNNSA1SDM3VjI5UTMzIDQ1IDIxIDUwUTkgNDUgNSAyOVoiIGZpbGw9IiM0ZjkzYWQiIHN0cm9rZT0iIzM1Njg3OCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTIxIDlWNDNNOSAyNEgzMyIgc3Ryb2tlPSIjOGJjNGQ2IiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
+    'boss-hulk-plates': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTgiIGhlaWdodD0iODIiIHZpZXdCb3g9IjAgMCAxMTggODIiPjxwYXRoIGQ9Ik04IDIwTDM1IDYgNTUgMjIgODIgNyAxMTAgMjIgMTAxIDY5IDcwIDYxIDU0IDc0IDIwIDY0WiIgZmlsbD0iIzU5NjI2ZSIgc3Ryb2tlPSIjNGQ1NTYxIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMjAgMjVMNDMgMTcgNTMgMzUgNzIgMTggOTggMjYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzk4YTJhZCIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9zdmc+',
+    'foe-walker-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCAyNCI+PHBhdGggZD0iTTYgNVExNCAxIDIyIDVMMjMgMTZRMTQgMjIgNSAxNloiIGZpbGw9IiNjMjU2NmIiIHN0cm9rZT0iIzhmM2E0YyIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
+    'foe-walker-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MiA0NCI+PHBhdGggZD0iTTggOEgzNEwzOCAzNVEyMSA0MiA0IDM1WiIgZmlsbD0iI2MyNTY2YiIgc3Ryb2tlPSIjOGYzYTRjIiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
+    'foe-walker-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNiAzNCI+PHBhdGggZD0iTTggM0gxNkwxNSAzMUg1Wk0yMCAzSDI4TDMxIDMxSDIxWiIgZmlsbD0iI2MyNTY2YiIgc3Ryb2tlPSIjOGYzYTRjIiBzdHJva2Utd2lkdGg9IjIuNSIvPjwvc3ZnPg==',
+    'foe-runner-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHBhdGggZD0iTTUgNFE5IDEgMTMgNEwxMiAxM1E5IDE2IDYgMTNaIiBmaWxsPSIjZGQ4YjNjIiBzdHJva2U9IiNhNDYwMmEiIHN0cm9rZS13aWR0aD0iMS40Ii8+PC9zdmc+',
+    'foe-runner-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNiA1MiI+PHBhdGggZD0iTTEwIDNIMTZMMjAgMTVMMTcgNDdIOUw2IDE1WiIgZmlsbD0iI2RkOGIzYyIgc3Ryb2tlPSIjYTQ2MDJhIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=',
+    'foe-runner-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCA0OCI+PHBhdGggZD0iTTggMkgxM0wxMCA0NEg0Wk0xNSAySDIwTDI0IDQ0SDE4WiIgZmlsbD0iI2RkOGIzYyIgc3Ryb2tlPSIjYTQ2MDJhIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=',
+    'foe-fat-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNCAyNCI+PHBhdGggZD0iTTYgN1ExNyAwIDI4IDdMMzAgMTdRMTcgMjMgNCAxN1oiIGZpbGw9IiM5YTYzYzQiIHN0cm9rZT0iIzZkNDU5MCIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
+    'foe-fat-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2OCA0MiI+PHBhdGggZD0iTTE4IDRRMzQgMCA1MCA0UTYzIDExIDY0IDI1UTYxIDM5IDM0IDQwUTcgMzkgNCAyNVE1IDExIDE4IDRaIiBmaWxsPSIjOWE2M2M0IiBzdHJva2U9IiM2ZDQ1OTAiIHN0cm9rZS13aWR0aD0iMy41Ii8+PC9zdmc+',
+    'foe-fat-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCAyMCI+PHBhdGggZD0iTTcgM0gyMEwxOCAxN0g1Wk0yOCAzSDQxTDQzIDE3SDMwWiIgZmlsbD0iIzlhNjNjNCIgc3Ryb2tlPSIjNmQ0NTkwIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=',
+    'foe-shield-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAyNSI+PHBhdGggZD0iTTggNVExNiAxIDI1IDZMMjMgMThRMTQgMjMgNiAxNloiIGZpbGw9IiM0ZjkzYWQiIHN0cm9rZT0iIzM1Njg3OCIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
+    'foe-shield-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MiA0OCI+PHBhdGggZD0iTTkgMTBMMjUgNEw0MiAxMEw0NyAyMEwzOSA0MkwxMyA0NUw1IDI4WiIgZmlsbD0iIzRmOTNhZCIgc3Ryb2tlPSIjMzU2ODc4IiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
+    'foe-shield-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCAzNiI+PHBhdGggZD0iTTggNEgxN0wxNiAzM0g2Wk0yNCAzSDM1TDQwIDMxSDI5WiIgZmlsbD0iIzRmOTNhZCIgc3Ryb2tlPSIjMzU2ODc4IiBzdHJva2Utd2lkdGg9IjIuNSIvPjwvc3ZnPg==',
+    'boss-hulk-head': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCAzNCI+PHBhdGggZD0iTTcgMTBMMTQgM0wyMiA2TDMwIDJMNDEgMTBMMzggMjdMMjUgMzFMMTAgMjZaIiBmaWxsPSIjNTk2MjZlIiBzdHJva2U9IiM0ZDU1NjEiIHN0cm9rZS13aWR0aD0iMi44Ii8+PC9zdmc+',
+    'boss-hulk-torso': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTIgNjQiPjxwYXRoIGQ9Ik04IDIxTDIwIDhMMzQgMTJMNDQgM0w1NSAxMEw2NyAyTDc4IDEzTDk0IDhMMTA1IDIyTDk2IDM0TDEwMSA1M0w3NiA2MEw1NyA1NUwzNSA2MUwxMiA1MkwxNyAzN1oiIGZpbGw9IiM1OTYyNmUiIHN0cm9rZT0iIzRkNTU2MSIgc3Ryb2tlLXdpZHRoPSI0LjUiLz48L3N2Zz4=',
+    'boss-hulk-legs': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OCA0NiI+PHBhdGggZD0iTTEyIDVMMjkgM0wzMSAxOEwyNCA0Mkg4TDEwIDIyWk00NiAzTDY1IDZMNjggMjRMNzAgNDJINTJMNDUgMThaIiBmaWxsPSIjNTk2MjZlIiBzdHJva2U9IiM0ZDU1NjEiIHN0cm9rZS13aWR0aD0iMyIvPjwvc3ZnPg==',
 };
 const SPR = {};
 for (const k in SPR_SRC) {
@@ -992,6 +1012,58 @@ function drawImg(im, x, y, size, ang) {
     ctx.restore();
 }
 
+/** Рисует спрайт в масштабе `k` от собственного размера. */
+function drawPart(im, x, y, k, ang) {
+    const w = im.naturalWidth * k, h = im.naturalHeight * k;
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(ang);
+    ctx.drawImage(im, -w / 2, -h / 2, w, h);
+    ctx.restore();
+}
+
+/** Спрайт смотрит вверх, кость идёт от a к b — отсюда поворот. */
+const boneAng = (a, b) => Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2;
+
+const KIND_SPR = {
+    'ходок': 'foe-walker', 'бегун': 'foe-runner', 'толстяк': 'foe-fat',
+    'щитоносец': 'foe-shield', 'туша': 'boss-hulk',
+};
+
+/**
+ * Тело врага собирается из трёх частей на трёх точках симуляции. Масштаб
+ * берётся от туловища, чтобы пропорции остались теми, что нарисованы.
+ */
+function drawFoeSprite(e) {
+    const pre = KIND_SPR[e.kind];
+    const torso = SPR[pre + '-torso'];
+    if (!pre || !ready(torso)) return false;
+    const k = (e.r * 2.3) / torso.naturalWidth;
+    const legs = SPR[pre + '-legs'], head = SPR[pre + '-head'];
+    if (ready(legs)) drawPart(legs, e.p[2].x, e.p[2].y, k, boneAng(e.p[2], e.p[1]));
+    drawPart(torso, e.p[1].x, e.p[1].y, k, boneAng(e.p[2], e.p[0]));
+    if (ready(head)) drawPart(head, e.p[0].x, e.p[0].y, k, boneAng(e.p[1], e.p[0]));
+
+    const extra = e.boss ? SPR['boss-hulk-plates'] : (e.kind === 'щитоносец' ? SPR['foe-shield-shield'] : null);
+    if (ready(extra)) {
+        const side = e.kind === 'щитоносец' ? e.r * 0.8 : 0;
+        const a = boneAng(e.p[2], e.p[0]);
+        drawPart(extra, e.p[1].x + Math.cos(a) * side, e.p[1].y + Math.sin(a) * side, k, a);
+    }
+
+    if (e.flash > 0) {                        // спрайт не перекрасить — белим поверх
+        ctx.globalAlpha = e.flash * 0.75;
+        ctx.strokeStyle = '#ffffff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.lineWidth = e.r * 1.3;
+        ctx.beginPath();
+        ctx.moveTo(e.p[2].x, e.p[2].y);
+        ctx.lineTo(e.p[1].x, e.p[1].y);
+        ctx.lineTo(e.p[0].x, e.p[0].y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+    }
+    return true;
+}
+
 function drawGround() {
     const b = biome();
     if (decoFor !== biomeIdx() || !deco.length) buildDeco();
@@ -1101,6 +1173,7 @@ function draw() {
     ctx.globalAlpha = 1;
 
     for (const e of foes) {
+        if (drawFoeSprite(e)) continue;
         const r = e.r * (1 - e.squeeze * 0.3);
         const white = e.flash > 0;
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -1187,15 +1260,29 @@ function draw() {
     ctx.strokeStyle = blink ? '#ffffff' : '#d8c39c';
     ctx.lineCap = 'round'; ctx.lineWidth = 3.5;
     ctx.beginPath(); ctx.moveTo(hero.x, hero.y); ctx.lineTo(pts[0].x, pts[0].y); ctx.stroke();
-    ctx.fillStyle = blink ? '#ffffff' : '#7d5f3d';
-    ctx.strokeStyle = '#0d1014'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(hero.x, hero.y + 2, 10, 0, 7); ctx.fill(); ctx.stroke();
     const hx = hero.x + hero.fx * 2, hy = hero.y - 6 + hero.fy * 2;
-    ctx.fillStyle = blink ? '#ffffff' : '#d8c39c';
-    ctx.beginPath(); ctx.arc(hx, hy, 6.5, 0, 7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#98a2ad';
-    ctx.beginPath(); ctx.arc(hx, hy, 6.4, Math.PI, 0); ctx.fill();
-    ctx.fillRect(hx - 0.9, hy - 7, 1.8, 6);
+    const body = SPR['hero-body'];
+    if (ready(body)) {
+        const k = (HERO_R * 2.4) / body.naturalWidth;
+        const face = Math.atan2(hero.fy, hero.fx) + Math.PI / 2;
+        drawPart(body, hero.x, hero.y + 1, k, face);
+        if (ready(SPR['hero-head'])) drawPart(SPR['hero-head'], hx, hy, k, face);
+        const hand = SPR['hero-hand'];   // у кисти свой масштаб: в общем она с голову
+        if (ready(hand)) drawPart(hand, pts[0].x, pts[0].y, 9 / hand.naturalWidth, face);
+        if (blink) {
+            ctx.globalAlpha = 0.6; ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(hero.x, hero.y, HERO_R, 0, 7); ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    } else {
+        ctx.fillStyle = blink ? '#ffffff' : '#7d5f3d';
+        ctx.strokeStyle = '#0d1014'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(hero.x, hero.y + 2, 10, 0, 7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = blink ? '#ffffff' : '#d8c39c';
+        ctx.beginPath(); ctx.arc(hx, hy, 6.5, 0, 7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#98a2ad';
+        ctx.beginPath(); ctx.arc(hx, hy, 6.4, Math.PI, 0); ctx.fill();
+    }
     for (let i = 0; i < hero.hpMax; i++) {
         ctx.fillStyle = i < hero.hp ? '#e0556d' : '#3a2530';
         ctx.fillRect(hero.x - hero.hpMax * 4 + i * 8, hero.y - 24, 6, 5);

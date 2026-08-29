@@ -1,425 +1,408 @@
 {
-  "boss-hulk-head": {
-    "w": 72,
-    "h": 60,
-    "pivot": [
-      0.5,
-      0.68
-    ],
-    "note": "крепление к туловищу"
-  },
-  "boss-hulk-legs": {
-    "w": 88,
-    "h": 70,
-    "pivot": [
-      0.5,
-      0.22
-    ],
-    "note": "крепление к туловищу"
-  },
-  "boss-hulk-plates": {
-    "w": 118,
-    "h": 82,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "boss-hulk-torso": {
-    "w": 112,
-    "h": 92,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "центр туловища"
-  },
-  "foe-fat-head": {
-    "w": 48,
-    "h": 40,
-    "pivot": [
-      0.5,
-      0.68
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-fat-legs": {
-    "w": 54,
-    "h": 44,
-    "pivot": [
-      0.5,
-      0.22
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-fat-torso": {
-    "w": 68,
-    "h": 58,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "центр туловища"
-  },
-  "foe-runner-head": {
-    "w": 28,
-    "h": 25,
-    "pivot": [
-      0.5,
-      0.68
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-runner-legs": {
-    "w": 28,
-    "h": 34,
-    "pivot": [
-      0.5,
-      0.22
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-runner-torso": {
-    "w": 32,
-    "h": 28,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "центр туловища"
-  },
-  "foe-shield-head": {
-    "w": 36,
-    "h": 32,
-    "pivot": [
-      0.5,
-      0.68
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-shield-legs": {
-    "w": 38,
-    "h": 34,
-    "pivot": [
-      0.5,
-      0.22
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-shield-shield": {
-    "w": 42,
-    "h": 54,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "foe-shield-torso": {
-    "w": 48,
-    "h": 42,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "центр туловища"
-  },
-  "foe-walker-head": {
-    "w": 34,
-    "h": 30,
-    "pivot": [
-      0.5,
-      0.68
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-walker-legs": {
-    "w": 34,
-    "h": 30,
-    "pivot": [
-      0.5,
-      0.22
-    ],
-    "note": "крепление к туловищу"
-  },
-  "foe-walker-torso": {
-    "w": 42,
-    "h": 34,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "центр туловища"
-  },
-  "gib-1": {
-    "w": 12,
-    "h": 12,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "gib-2": {
-    "w": 18,
-    "h": 15,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "gib-3": {
-    "w": 24,
-    "h": 18,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "gib-4": {
-    "w": 30,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "gib-5": {
-    "w": 36,
-    "h": 30,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "gib-6": {
-    "w": 42,
-    "h": 34,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "hero-body": {
-    "w": 60,
-    "h": 60,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "центр груди"
-  },
-  "hero-hand": {
-    "w": 18,
-    "h": 18,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "hero-head": {
-    "w": 39,
-    "h": 39,
-    "pivot": [
-      0.5,
-      0.6
-    ],
-    "note": "низ шеи"
-  },
-  "icon-axe": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-dash": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-flail": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-gear": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-heart": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-longer": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-sharpen": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-slick": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-sound-off": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-sound-on": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-spikes": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-sword": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "icon-weight": {
-    "w": 24,
-    "h": 24,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "pickup-soul": {
-    "w": 27,
-    "h": 27,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "prop-rock": {
-    "w": 114,
-    "h": 114,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "weapon-axe-blade": {
-    "w": 66,
-    "h": 60,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "weapon-axe-haft": {
-    "w": 36,
-    "h": 18,
-    "pivot": [
-      0.1,
-      0.5
-    ],
-    "note": "крепление оружия"
-  },
-  "weapon-flail-head": {
-    "w": 45,
-    "h": 45,
-    "pivot": [
-      0.5,
-      0.68
-    ],
-    "note": "крепление к туловищу"
-  },
-  "weapon-flail-link": {
-    "w": 30,
-    "h": 18,
-    "pivot": [
-      0.1,
-      0.5
-    ],
-    "note": "крепление оружия"
-  },
-  "weapon-sword-blade": {
-    "w": 90,
-    "h": 33,
-    "pivot": [
-      0.5,
-      0.5
-    ],
-    "note": "center"
-  },
-  "weapon-sword-haft": {
-    "w": 33,
-    "h": 15,
-    "pivot": [
-      0.1,
-      0.5
-    ],
-    "note": "крепление оружия"
-  }
+ "boss-hulk-head": {
+  "w": 48.0,
+  "h": 34.0,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "boss-hulk-legs": {
+  "w": 78.0,
+  "h": 46.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "boss-hulk-plates": {
+  "w": 118,
+  "h": 82,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "boss-hulk-torso": {
+  "w": 112.0,
+  "h": 64.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-fat-head": {
+  "w": 34.0,
+  "h": 24.0,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "foe-fat-legs": {
+  "w": 48.0,
+  "h": 20.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-fat-torso": {
+  "w": 68.0,
+  "h": 42.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-runner-head": {
+  "w": 18.0,
+  "h": 18.0,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "foe-runner-legs": {
+  "w": 28.0,
+  "h": 48.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-runner-torso": {
+  "w": 26.0,
+  "h": 52.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-shield-head": {
+  "w": 32.0,
+  "h": 25.0,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "foe-shield-legs": {
+  "w": 44.0,
+  "h": 36.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-shield-shield": {
+  "w": 42,
+  "h": 54,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "foe-shield-torso": {
+  "w": 52.0,
+  "h": 48.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-walker-head": {
+  "w": 28.0,
+  "h": 24.0,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "foe-walker-legs": {
+  "w": 36.0,
+  "h": 34.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "foe-walker-torso": {
+  "w": 42.0,
+  "h": 44.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "gib-1": {
+  "w": 12,
+  "h": 12,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "gib-2": {
+  "w": 18,
+  "h": 15,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "gib-3": {
+  "w": 24,
+  "h": 18,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "gib-4": {
+  "w": 30,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "gib-5": {
+  "w": 36,
+  "h": 30,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "gib-6": {
+  "w": 42,
+  "h": 34,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "hero-body": {
+  "w": 54.0,
+  "h": 58.0,
+  "pivot": [
+   0.5,
+   0.88
+  ]
+ },
+ "hero-hand": {
+  "w": 24.0,
+  "h": 24.0,
+  "pivot": [
+   0.5,
+   0.5
+  ]
+ },
+ "hero-head": {
+  "w": 39,
+  "h": 39,
+  "pivot": [
+   0.5,
+   0.6
+  ],
+  "note": "низ шеи"
+ },
+ "icon-axe": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-dash": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-flail": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-gear": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-heart": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-longer": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-sharpen": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-slick": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-sound-off": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-sound-on": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-spikes": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-sword": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "icon-weight": {
+  "w": 24,
+  "h": 24,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "pickup-soul": {
+  "w": 27,
+  "h": 27,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "prop-rock": {
+  "w": 114,
+  "h": 114,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "weapon-axe-blade": {
+  "w": 66,
+  "h": 60,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "weapon-axe-haft": {
+  "w": 36,
+  "h": 18,
+  "pivot": [
+   0.1,
+   0.5
+  ],
+  "note": "крепление оружия"
+ },
+ "weapon-flail-head": {
+  "w": 45,
+  "h": 45,
+  "pivot": [
+   0.5,
+   0.68
+  ],
+  "note": "крепление к туловищу"
+ },
+ "weapon-flail-link": {
+  "w": 30,
+  "h": 18,
+  "pivot": [
+   0.1,
+   0.5
+  ],
+  "note": "крепление оружия"
+ },
+ "weapon-sword-blade": {
+  "w": 90,
+  "h": 33,
+  "pivot": [
+   0.5,
+   0.5
+  ],
+  "note": "center"
+ },
+ "weapon-sword-haft": {
+  "w": 33,
+  "h": 15,
+  "pivot": [
+   0.1,
+   0.5
+  ],
+  "note": "крепление оружия"
+ }
 }
