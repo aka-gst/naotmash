@@ -155,6 +155,8 @@ const S = {
     bend: 5,          // упругость на излом: 0 — цепь, 9 — почти прут
     bladeW: 13,       // толщина боевой части
     bladeRGB: [150, 190, 215],
+    rigid: false,     // жёсткое оружие не болтается, а продолжает руку
+    thrust: false,    // жёсткое: колоть вдоль древка, а не рубить поперёк
     sprite: 'flail',  // какой спрайт боевой части брать
     haft: '#8b9198', haftDark: '#3b4046',
     sound: true,
@@ -280,7 +282,8 @@ let best = 0, spawnTimer = 0, shake = 0, dead = 0;
 let hero = null, held = null, tense = false, slow = 0;
 let started = false, menu = false;
 let score = 0, kills = 0, record = 0;
-let hooked = null, thrown = 0, grabs = 0;   // как быстро едет петля
+let hooked = null, thrown = 0, grabs = 0;
+let armX = 0, armY = 1;   // куда смотрит древко у жёсткого оружия   // как быстро едет петля
 let theme = null, bossDone = false;
 let segNow = 11;   // рабочая длина звена: под напряжением цепь подбирается
 let wave = 0, spawnLeft = 0, paused = false;
@@ -408,6 +411,28 @@ function step(dt) {
     }
     if (ad > 1) { hero.fx = ax / ad; hero.fy = ay / ad; }
 
+    // Жёсткое оружие не болтается: оно продолжает руку. Направление берём от
+    // тела к кисти — то есть куда вытянул руку, туда и смотрит древко.
+    if (S.rigid) {
+        const dx = h.x - hero.x, dy = h.y - hero.y;
+        const d = Math.hypot(dx, dy) || 1;
+        armX += (dx / d - armX) * 0.25;
+        armY += (dy / d - armY) * 0.25;
+        const an = Math.hypot(armX, armY) || 1;
+        armX /= an; armY /= an;
+        for (let i = 1; i < pts.length; i++) {
+            const p = pts[i];
+            p.px = p.x; p.py = p.y;
+            p.x = h.x + armX * i * segNow;
+            p.y = h.y + armY * i * segNow;
+        }
+        for (const p of pts) bounce(p, 8);
+        combat(dt);
+        if (S.rock) moveRock(dt);
+        if (S.foes) moveFoes(dt);
+        return;
+    }
+
     // Остальные звенья живут своей инерцией: именно отставание и даёт хлыст.
     // Чем длиннее оружие, тем гуще среда: иначе прокачка делает его диким.
     const air = Math.max(0.972, S.drag - grown() * 0.0027);
@@ -509,8 +534,20 @@ function combat(dt) {
         if (hitPart >= 0) {
             const i = hitSeg, p = pts[i];
             const [vx, vy] = vel(p);
-            const sp = Math.hypot(vx, vy);
-            if (sp < HIT_SPEED) {
+            // У копья считается движение вдоль древка, у клинка — поперёк.
+            // Поэтому колоть и рубить это разные действия, а не одно.
+            // «Своё» направление считается полностью, чужое — с большой
+            // скидкой. Запрещать вбок нельзя: выпад ограничен длиной руки
+            // и в чистом виде не дотягивает до порога урона.
+            let sp;
+            if (!S.rigid) sp = Math.hypot(vx, vy);
+            else {
+                const along = Math.abs(vx * armX + vy * armY);
+                const perp = Math.abs(vx * -armY + vy * armX);
+                sp = S.thrust ? along * 1.6 + perp * 0.3 : perp + along * 0.3;
+            }
+            const floor = S.rigid ? 150 : HIT_SPEED;
+            if (sp < floor) {
                 // Медленное касание не бьёт — оно цепляет: цепь обматывает.
                 if (!hooked && !e.boss && !e.held && i >= pts.length - BLADE) {
                     hooked = e; e.held = true; grabs++;
@@ -525,7 +562,7 @@ function combat(dt) {
                 continue;
             }
             const mul = i >= pts.length - BLADE ? S.bladeMul * (held ? held.mul : 1) : S.bodyMul;
-            const dmg = DMG_K * Math.sqrt(sp - HIT_SPEED) * mul;
+            const dmg = DMG_K * Math.sqrt(sp - floor) * mul;
             hurt(e, dmg, vx * 0.30, vy * 0.30, e.p[hitPart]);
             e.iframe = 0.1;
             // Точный сильный удар по голове сносит её вместе с врагом.
@@ -913,10 +950,16 @@ const WEAPONS = [
         { len: 6, seg: 12, tipWeight: 0.60, bend: 7, bladeMul: 3.4, headSpeed: 780,
           sprite: 'axe', haft: '#8a6238', haftDark: '#4a341d',
           bladeW: 20, bladeRGB: [205, 170, 115] }],
-    ['Меч', 'разгона нет совсем: бьёт ровно с той скоростью, с какой ведёшь рукой. Зато рука быстрая',
-        { len: 4, seg: 11, tipWeight: 0.10, bend: 9, bladeMul: 2.8, headSpeed: 1150,
+    ['Меч', 'жёсткий клинок на руке: рубит поперёк. Ничего не болтается, зато и разгона нет',
+        { len: 4, seg: 12, rigid: true, thrust: false, bladeMul: 4.2, headSpeed: 1150,
+          tipWeight: 0.1, bend: 9,
           sprite: 'sword', haft: '#8a6238', haftDark: '#4a341d',
-          bladeW: 11, bladeRGB: [190, 200, 212] }],
+          bladeW: 13, bladeRGB: [190, 200, 212] }],
+    ['Копьё', 'жёсткое древко: бьёт только уколом от себя. Достаёт дальше всех, но вбок им не помашешь',
+        { len: 7, seg: 13, rigid: true, thrust: true, bladeMul: 4.8, headSpeed: 1000,
+          tipWeight: 0.1, bend: 9,
+          sprite: 'sword', haft: '#7a5a34', haftDark: '#43301a',
+          bladeW: 12, bladeRGB: [200, 205, 214] }],
 ];
 
 const RULES = '<ul>' +
@@ -1527,6 +1570,12 @@ if (location.search.includes('test')) {
         // иначе бой идёт в арене 0x0 и проверка врёт.
         W = 450; H = 900; sc = 1;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const wi = parseInt((location.search.match(/[?&]w=(\d+)/) || [])[1], 10);
+        if (WEAPONS[wi]) {                       // ?w=N — проверить конкретное оружие
+            const w = { ...WEAPONS[wi][2] };
+            w.len0 = w.len;
+            Object.assign(S, w); Object.assign(BASE, w);
+        }
         reset();
         $('start').classList.remove('on');   // чтобы было видно арену
         started = true;
@@ -1539,8 +1588,11 @@ if (location.search.includes('test')) {
             // Чередуем быстрый замах и медленное подведение: иначе бот не
             // умеет цеплять, и захват с броском нечем проверить.
             ang += ((Math.floor(t / 2.5) % 2) ? 7 : 0.7) / 120;
-            aim.x = W / 2 + Math.cos(ang) * R;
-            aim.y = H / 2 + Math.sin(ang) * R;
+            // Радиус тоже гуляет: без движения от себя копьём не уколоть,
+            // и проверить его было бы нечем.
+            const reach = R * (0.45 + 0.55 * Math.abs(Math.sin(t * 2.3)));
+            aim.x = W / 2 + Math.cos(ang) * reach;
+            aim.y = H / 2 + Math.sin(ang) * reach;
             if (paused) startWave();          // карточки в тесте пропускаем
             step(1 / 120);
             const q = pts[pts.length - 1];
