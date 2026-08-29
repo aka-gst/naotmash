@@ -52,10 +52,15 @@
   .modal.on { display: flex; }
   .modal h2 { margin: 0 0 6px; font-size: 16px; font-weight: 600; color: #9fb0c2; }
   .modal button {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    display: flex; flex-direction: row; align-items: center; gap: 12px;
     width: min(340px, 90%); height: auto; padding: 11px 14px; text-align: left;
     background: #1a232e; border: 1px solid #2c3a4a; border-radius: 11px;
   }
+  .modal .ic { flex: 0 0 26px; color: #8fb0c9; }
+  .modal .ic svg { display: block; width: 26px; height: 26px; }
+  .modal .tx { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+  #gear svg { display: block; width: 15px; height: 15px; margin: 0 auto; }
+  #panel .ic svg { display: block; width: 14px; height: 14px; }
   .modal button:active { background: #29455f; }
   .modal b { font-size: 15px; color: #fff; }
   .modal span { font-size: 12.5px; color: #93a5b8; line-height: 1.4; }
@@ -113,7 +118,7 @@
 
 <div id="over" class="modal"></div>
 
-<button id="gear" aria-label="настройки">⚙</button>
+<button id="gear" aria-label="настройки"></button>
 
 <div id="panel">
   <div class="grp"><span>длина <i id="v-len">7</i></span><button data-a="len-">−</button><button data-a="len+">+</button></div>
@@ -121,7 +126,7 @@
   <div class="grp"><span>упругость <i id="v-bend">5</i></span><button data-a="bend-">−</button><button data-a="bend+">+</button></div>
   <div class="grp"><span>инерция руки <i id="v-hand">5</i></span><button data-a="hand-">−</button><button data-a="hand+">+</button></div>
   <div class="grp"><span>рывок <i id="v-spd">900</i></span><button data-a="spd-">−</button><button data-a="spd+">+</button></div>
-  <div class="grp"><button data-a="sound" class="on">звук</button><button data-a="rock" class="on">камень</button><button data-a="foes" class="on">враги</button><button data-a="reset">сброс</button></div>
+  <div class="grp"><button data-a="sound" class="on"><span class="ic" id="snd"></span></button><button data-a="rock" class="on">камень</button><button data-a="foes" class="on">враги</button><button data-a="reset">сброс</button></div>
 </div>
 
 <script type="module">
@@ -150,6 +155,8 @@ const S = {
     bend: 5,          // упругость на излом: 0 — цепь, 9 — почти прут
     bladeW: 13,       // толщина боевой части
     bladeRGB: [150, 190, 215],
+    sprite: 'flail',  // какой спрайт боевой части брать
+    haft: '#8b9198', haftDark: '#3b4046',
     sound: true,
     mode: 'head',     // 'head' — палец держит голову; 'tip' — палец держит оружие
     bodyMul: 1,       // множитель урона обычных звеньев
@@ -184,6 +191,41 @@ const BIOMES = [
     { name: 'Чертог', tile: 'hall', sky: '#15100c', line: '#221913', spot: '#2c2019', mark: '#4a3220', style: 'плиты' },
     { name: 'Пепел',  tile: 'ash',  sky: '#121110', line: '#1c1a19', spot: '#262321', mark: '#3b332c', style: 'пепел' },
 ];
+
+/** Спрайты и текстуры вшиты в файл: подгружать их извне игре запрещено. */
+const SPR_SRC = {
+    'prop-rock': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTE0IiBoZWlnaHQ9IjExNCIgdmlld0JveD0iMCAwIDExNCAxMTQiPjxwYXRoIGQ9Ik0xNiAyOEw0OSA4IDkxIDE4IDEwNyA1NSA4OSA5OCA0NCAxMDYgOSA3OFoiIGZpbGw9IiM1OTYyNmUiIHN0cm9rZT0iIzMwMzYzZCIgc3Ryb2tlLXdpZHRoPSI4IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTMxIDMxTDU0IDIwIDgwIDMwIDkxIDU1IDc1IDc5IDQzIDg2IDI0IDY3WiIgZmlsbD0iIzZkNzY4MSIvPjwvc3ZnPg==',
+    'pickup-soul': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjciIGhlaWdodD0iMjciIHZpZXdCb3g9IjAgMCAyNyAyNyI+PHBhdGggZD0iTTE0IDJRMjUgOSAxOCAxN1ExNiAyMCAyMSAyNVE4IDI1IDUgMTdRMiA4IDE0IDJaIiBmaWxsPSIjOGVmMmIwIiBzdHJva2U9IiMzYjhiNjAiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==',
+    'weapon-flail-link': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAzMCAxOCI+PGVsbGlwc2UgY3g9IjE1IiBjeT0iOSIgcng9IjExIiByeT0iNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTZiZWQ3IiBzdHJva2Utd2lkdGg9IjQiLz48L3N2Zz4=',
+    'weapon-flail-head': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDUiIGhlaWdodD0iNDUiIHZpZXdCb3g9IjAgMCA0NSA0NSI+PHBhdGggZD0iTTIyIDJMMjcgMTEgMzggNyAzNCAxOCA0NCAyMyAzNCAyOCAzOCAzOSAyNyAzNSAyMiA0NCAxNyAzNSA2IDM5IDEwIDI4IDEgMjMgMTAgMTggNiA3IDE3IDExWiIgZmlsbD0iIzk2YmVkNyIgc3Ryb2tlPSIjMzM0YjViIiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
+    'weapon-axe-haft': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAzNiAxOCI+PHJlY3QgeD0iMyIgeT0iNiIgd2lkdGg9IjMwIiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjN2Q1ZjNkIiBzdHJva2U9IiMzMDI3MWUiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==',
+    'weapon-axe-blade': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjYiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2NiA2MCI+PHBhdGggZD0iTTggOVE0NSA0IDU5IDMwUTQ1IDU2IDggNTFMMjIgMzBaIiBmaWxsPSIjY2RhYTczIiBzdHJva2U9IiM1ZjRhMmUiIHN0cm9rZS13aWR0aD0iNSIvPjwvc3ZnPg==',
+    'weapon-sword-haft': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzMiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAzMyAxNSI+PHBhdGggZD0iTTMgN0gzME0xNiAyVjEzIiBzdHJva2U9IiNiZWM4ZDQiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+',
+    'weapon-sword-blade': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTAiIGhlaWdodD0iMzMiIHZpZXdCb3g9IjAgMCA5MCAzMyI+PHBhdGggZD0iTTQgMTZMNzIgNSA4NyAxNiA3MiAyOFoiIGZpbGw9IiNiZWM4ZDQiIHN0cm9rZT0iIzU5NjI2ZSIgc3Ryb2tlLXdpZHRoPSIzIi8+PC9zdmc+',
+};
+const SPR = {};
+for (const k in SPR_SRC) {
+    const im = new Image();
+    im.src = SPR_SRC[k];
+    SPR[k] = im;
+}
+const ready = (im) => im && im.complete && im.naturalWidth > 0;
+
+const ICON = {
+    'axe': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 20L17 6M13 4Q20 3 22 9Q18 13 12 11Z\"/></g></svg>",
+    'dash': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7H14M3 12H19M3 17H14\"/></g></svg>",
+    'flail': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20L10 14M11 13L15 9M17 7L20 4\"/><circle cx=\"20\" cy=\"4\" r=\"3\"/></g></svg>",
+    'gear': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2L14 5 18 4 19 8 22 10 20 14 21 18 17 19 14 22 11 20 7 21 5 17 2 14 4 10 3 6 7 5 9 2Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\" fill=\"none\"/></g></svg>",
+    'heart': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21L3 12Q0 5 6 3Q10 2 12 6Q14 2 18 3Q24 5 21 12Z\"/></g></svg>",
+    'longer': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12H21M17 8L21 12 17 16M7 8L3 12 7 16\"/></g></svg>",
+    'sharpen': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 18L19 3 21 5 6 21Z\"/></g></svg>",
+    'slick': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2Q4 11 5 16A7 7 0 0 0 19 16Q20 11 12 2Z\"/></g></svg>",
+    'sound-off': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10H7L12 5V19L7 14H3ZM16 9L22 15M22 9L16 15\"/></g></svg>",
+    'sound-on': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10H7L12 5V19L7 14H3ZM15 9Q19 12 15 15M18 6Q24 12 18 18\"/></g></svg>",
+    'spikes': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2L15 8 22 6 18 12 22 18 15 16 12 22 9 16 2 18 6 12 2 6 9 8Z\"/></g></svg>",
+    'sword': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20L18 6 21 3M8 16L4 12\"/></g></svg>",
+    'weight': "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 8H17L20 21H4ZM9 8A3 3 0 0 1 15 8\"/></g></svg>",
+};
 
 /** Текстуры земли вшиты в файл: подгружать их извне игре запрещено. */
 const GROUND = {
@@ -792,12 +834,15 @@ function moveRock(dt) {
 const WEAPONS = [
     ['Цеп', 'разгоняется сильнее всех и достаёт дальше всех. Второй палец подбирает цепь — этим он и управляется',
         { len: 10, seg: 10, tipWeight: 0.30, bend: 2, bladeMul: 1.9, headSpeed: 900,
+          sprite: 'flail', haft: '#8b9198', haftDark: '#3b4046',
           bladeW: 13, bladeRGB: [150, 190, 215] }],
     ['Секира', 'разгон средний, зато сносит с одного удара и таскает тебя за собой',
         { len: 6, seg: 12, tipWeight: 0.60, bend: 7, bladeMul: 3.4, headSpeed: 780,
+          sprite: 'axe', haft: '#8a6238', haftDark: '#4a341d',
           bladeW: 20, bladeRGB: [205, 170, 115] }],
     ['Меч', 'разгона нет совсем: бьёт ровно с той скоростью, с какой ведёшь рукой. Зато рука быстрая',
         { len: 4, seg: 11, tipWeight: 0.10, bend: 9, bladeMul: 2.8, headSpeed: 1150,
+          sprite: 'sword', haft: '#8a6238', haftDark: '#4a341d',
           bladeW: 11, bladeRGB: [190, 200, 212] }],
 ];
 
@@ -830,7 +875,9 @@ function showStart() {
     const el = $('start');
     el.innerHTML = '<h1>Наотмашь</h1>' + RULES +
         (record ? '<p class="rec">рекорд ' + record + '</p>' : '') +
-        WEAPONS.map((w, i) => '<button data-w="' + i + '"><b>' + w[0] + '</b><span>' + w[1] + '</span></button>').join('');
+        WEAPONS.map((w, i) => '<button data-w="' + i + '">' +
+            '<span class="ic">' + (ICON[w[2].sprite] || '') + '</span>' +
+            '<span class="tx"><b>' + w[0] + '</b><span>' + w[1] + '</span></span></button>').join('');
     el.classList.add('on');
 }
 
@@ -884,12 +931,12 @@ const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* не везд
  * наконечника, скорость руки. Поэтому её видно и слышно в замахе.
  */
 const UPGRADES = [
-    ['Длиннее', '+2 звена: дальше достаёшь и больнее бьёшь, но хуже поворачиваешь', () => grow(2)],
-    ['Тяжёлый наконечник', 'оружие сильнее таскает тело за собой', () => { S.tipWeight = Math.min(0.6, S.tipWeight + 0.08); }],
-    ['Рывок', '+150 к скорости руки', () => { S.headSpeed += 150; }],
-    ['Шипы', 'больнее бьёт всё тело, а не только кончик', () => { S.bodyMul += 0.4; }],
-    ['Заточка', 'больнее бьёт наконечник', () => { S.bladeMul += 0.5; }],
-    ['Скользкое тело', 'тело дольше держит разгон', () => { S.drag = Math.min(0.998, S.drag + 0.002); }],
+    ['Длиннее', '+2 звена: дальше достаёшь и больнее бьёшь, но хуже поворачиваешь', () => grow(2), 'longer'],
+    ['Тяжёлый наконечник', 'оружие сильнее таскает тело за собой', () => { S.tipWeight = Math.min(0.6, S.tipWeight + 0.08); }, 'weight'],
+    ['Рывок', '+150 к скорости руки', () => { S.headSpeed += 150; }, 'dash'],
+    ['Шипы', 'больнее бьёт всё тело, а не только кончик', () => { S.bodyMul += 0.4; }, 'spikes'],
+    ['Заточка', 'больнее бьёт наконечник', () => { S.bladeMul += 0.5; }, 'sharpen'],
+    ['Скользкое тело', 'тело дольше держит разгон', () => { S.drag = Math.min(0.998, S.drag + 0.002); }, 'slick'],
 ];
 
 function offerCards() {
@@ -899,7 +946,9 @@ function offerCards() {
     while (pick.length < 3 && pool.length) pick.push(pool.splice(Math.floor(rnd(0, pool.length)), 1)[0]);
     const el = $('cards');
     el.innerHTML = '<h2>Волна ' + wave + ' зачищена</h2>' +
-        pick.map((u, i) => '<button data-u="' + i + '"><b>' + u[0] + '</b><span>' + u[1] + '</span></button>').join('');
+        pick.map((u, i) => '<button data-u="' + i + '">' +
+            '<span class="ic">' + (ICON[u[3]] || '') + '</span>' +
+            '<span class="tx"><b>' + u[0] + '</b><span>' + u[1] + '</span></span></button>').join('');
     el.classList.add('on');
     el.onclick = (ev) => {
         const b = ev.target.closest('button');
@@ -929,6 +978,19 @@ function inside(poly, x, y) {
 }
 
 /* ──────────────────────────────── Отрисовка ────────────────────────────── */
+
+/**
+ * Спрайты нарисованы развёрнутыми вверх, а кости считает физика. Поэтому
+ * поворот — это направление кости плюс четверть оборота.
+ */
+function drawImg(im, x, y, size, ang) {
+    const w = im.naturalWidth || 1, h = im.naturalHeight || 1;
+    const k = size / Math.max(w, h);
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(ang);
+    ctx.drawImage(im, -w * k / 2, -h * k / 2, w * k, h * k);
+    ctx.restore();
+}
 
 function drawGround() {
     const b = biome();
@@ -1005,15 +1067,21 @@ function draw() {
     }
 
     for (const o of orbs) {
-        ctx.fillStyle = '#8ef2b0';
-        ctx.beginPath(); ctx.arc(o.x, o.y, 4.5, 0, 7); ctx.fill();
+        if (ready(SPR['pickup-soul'])) {
+            drawImg(SPR['pickup-soul'], o.x, o.y, 13, Math.sin(frame * 0.06 + o.x) * 0.25);
+        } else {
+            ctx.fillStyle = '#8ef2b0';
+            ctx.beginPath(); ctx.arc(o.x, o.y, 4.5, 0, 7); ctx.fill();
+        }
     }
 
     if (S.rock) {
-        ctx.fillStyle = '#6b6f77';
-        ctx.beginPath(); ctx.arc(rock.x, rock.y, rock.r, 0, 7); ctx.fill();
-        ctx.fillStyle = '#878d96';
-        ctx.beginPath(); ctx.arc(rock.x - 5, rock.y - 5, rock.r * 0.55, 0, 7); ctx.fill();
+        if (ready(SPR['prop-rock'])) {
+            drawImg(SPR['prop-rock'], rock.x, rock.y, rock.r * 2.2, rock.x * 0.01);
+        } else {
+            ctx.fillStyle = '#6b6f77';
+            ctx.beginPath(); ctx.arc(rock.x, rock.y, rock.r, 0, 7); ctx.fill();
+        }
     }
 
     for (const b of bits) {
@@ -1082,15 +1150,26 @@ function draw() {
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-    ctx.strokeStyle = '#2a3b30'; ctx.lineWidth = 13; ctx.stroke();
-    ctx.strokeStyle = '#5f9d6b'; ctx.lineWidth = 8.5; ctx.stroke();
+    ctx.strokeStyle = S.haftDark; ctx.lineWidth = 13; ctx.stroke();
+    ctx.strokeStyle = S.haft; ctx.lineWidth = 8.5; ctx.stroke();
 
     ctx.beginPath(); ctx.moveTo(pts[pts.length - BLADE - 1].x, pts[pts.length - BLADE - 1].y);
     for (let i = pts.length - BLADE; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
     const c = S.bladeRGB;
-    ctx.strokeStyle = 'rgb(' + Math.round(c[0] + (255 - c[0]) * hot) + ',' +
-        Math.round(c[1] * (1 - 0.32 * hot)) + ',' + Math.round(c[2] * (1 - 0.5 * hot)) + ')';
-    ctx.lineWidth = S.bladeW; ctx.stroke();
+    const blade = SPR['weapon-' + S.sprite + '-blade'] || SPR['weapon-flail-head'];
+    if (ready(blade)) {
+        const a = pts[pts.length - 1], b = pts[Math.max(0, pts.length - 2)];
+        const ang = Math.atan2(a.y - b.y, a.x - b.x) + Math.PI / 2;
+        if (hot > 0.05) {                      // разогнанное оружие светится
+            ctx.fillStyle = 'rgba(255,' + Math.round(200 - 80 * hot) + ',120,' + (0.25 * hot) + ')';
+            ctx.beginPath(); ctx.arc(a.x, a.y, S.bladeW * (1 + hot), 0, 7); ctx.fill();
+        }
+        drawImg(blade, a.x, a.y, S.bladeW * 2.4, ang);
+    } else {
+        ctx.strokeStyle = 'rgb(' + Math.round(c[0] + (255 - c[0]) * hot) + ',' +
+            Math.round(c[1] * (1 - 0.32 * hot)) + ',' + Math.round(c[2] * (1 - 0.5 * hot)) + ')';
+        ctx.lineWidth = S.bladeW; ctx.stroke();
+    }
 
     if (held) {                       // подобранный кусок висит на конце
         const t = pts[pts.length - 1];
@@ -1191,6 +1270,7 @@ function ui() {
     $('v-spd').textContent = S.headSpeed;
     $('v-hand').textContent = S.hand;
     $('v-bend').textContent = S.bend;
+    $('snd').innerHTML = S.sound ? (ICON['sound-on'] || 'вкл') : (ICON['sound-off'] || 'выкл');
 }
 
 document.getElementById('panel').addEventListener('click', (ev) => {
@@ -1224,9 +1304,11 @@ try { record = parseInt(localStorage.getItem('worm-record'), 10) || 0; } catch {
 showStart();
 
 // Открытая панель — это и есть пауза: крутить ползунки в бою невозможно.
+const gearFace = () => { $('gear').innerHTML = menu ? '▶' : (ICON.gear || '⚙'); };
+gearFace();
 $('gear').addEventListener('click', () => {
     menu = !$('panel').classList.toggle('off');
-    $('gear').textContent = menu ? '▶' : '⚙';
+    gearFace();
 });
 
 $('over').addEventListener('click', (ev) => {
