@@ -1433,8 +1433,9 @@ function play(key, vol, rate) {
  * оживает сам при переразмере окна и при возврате во вкладку, и обход снова
  * слышно на колонках. Съёмочные и проверочные режимы молчат сами.
  */
-const QUIET = /тихо|quiet|loop=|петля=|кадр|flow=|test=/
-    .test(decodeURIComponent(location.search));
+const ASK = decodeURIComponent(location.search);
+const QUIET = /(^|[?&#])(тихо|quiet)(=1|=true)?([&#]|$)/i.test(ASK)   // общее на все игры
+    || /(^|[?&#])(loop|петля|кадр|still|flow|test)(=|[&#]|$)/i.test(ASK);
 
 /** Контекст можно завести только из настоящего касания. */
 function audioOn() {
