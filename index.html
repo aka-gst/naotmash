@@ -357,6 +357,8 @@ let hero = null, held = null, tense = false, slow = 0;
 let started = false, menu = false;
 let score = 0, kills = 0, record = 0;
 let hooked = null, thrown = 0, grabs = 0;
+let trial = null, trials = 0;   // испытание между волнами
+const METER = 20;   // единиц мира в метре: викинг ростом чуть больше метра
 let armX = 0, armY = 1;   // куда смотрит древко у жёсткого оружия   // как быстро едет петля
 let theme = null, bossDone = false;
 let segNow = 11;   // рабочая длина звена: под напряжением цепь подбирается
@@ -389,6 +391,7 @@ function reset() {
     rock = { x: W / 2, y: H * 0.28, vx: 0, vy: 0, r: 19 };
     aim = { x: W / 2, y: H / 2, down: false };
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
+    trial = null; trials = 0;
     srand(Math.floor(Math.random() * 2147483647));
     startWave();
 }
@@ -949,14 +952,15 @@ function spawn() {
 }
 
 function moveFoes(dt) {
-    if (spawnLeft > 0) {
+    if (trial) { tickTrial(dt); }
+    else if (spawnLeft > 0) {
         spawnTimer -= dt;
         if (spawnTimer <= 0 && foes.length < 30) {
             spawnTimer = Math.max(0.2, 0.9 - wave * 0.05);
             spawn(); spawnLeft--;
         }
-    } else if (!foes.length && !paused) {
-        offerCards();
+    } else if (!foes.length && !paused && !trial) {
+        startTrial();
     }
 
     hero.iframe -= dt;
@@ -1184,6 +1188,67 @@ function blip(f, dur, type, vol, to) {
 
 const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* не везде есть */ } };
 
+/* ─────────────────────────── Испытание ────────────────────────────────── */
+
+/**
+ * Между волнами — одно физическое испытание: закинуть тело в ворота как
+ * можно дальше. Ничего нового для него не понадобилось: захват, полёт и
+ * тряпичные тела уже написаны, а мерить дальность умеет любая физика.
+ */
+function startTrial() {
+    paused = false;
+    hooked = null;
+    foes = []; orbs = []; bits = [];
+    const k = KINDS['ходок'];
+    const x = W * 0.28, y = H * 0.62;
+    foes.push({
+        x, y, kind: 'ходок', boss: false, hp: 99999, hp0: 99999,
+        r: k.r, link: k.link, walk: 0, damp: k.damp, mass: 0.7, armor: 0,
+        color: k.color, dark: k.dark, chain: 0, step: 0, down: 0,
+        iframe: 0, flash: 0, squeeze: 0, touch: 0, held: false, flying: 0,
+        p: body(x, y, k.link),
+    });
+    hero.x = W * 0.22; hero.y = H * 0.72;
+    hero.hp = hero.hpMax;
+    trial = {
+        goalY: H * 0.18, half: W * 0.22,
+        from: null, best: 0, t: 26, done: 0,
+    };
+    blip(660, 0.12, 'sine', 0.1); blip(880, 0.18, 'sine', 0.08);
+}
+
+function tickTrial(dt) {
+    const e = foes[0];
+    if (!e) { endTrial(); return; }
+    trial.t -= dt;
+
+    // Началом броска считаем место, откуда тело отпустили.
+    if (e.flying > 0 && !trial.from) trial.from = { x: e.x, y: e.y };
+    if (trial.from) {
+        const d = Math.hypot(e.x - trial.from.x, e.y - trial.from.y);
+        trial.best = Math.max(trial.best, d);
+        const q = e.p[1];
+        const still = Math.hypot(q.x - q.px, q.y - q.py) / DT < 40;
+        trial.done = still ? trial.done + dt : 0;
+        if (trial.done > 0.6) { endTrial(); return; }
+    }
+    if (trial.t <= 0) endTrial();
+}
+
+function endTrial() {
+    const e = foes[0];
+    const meters = trial.best / METER;
+    // Ворота — створ у дальнего края: пролетел между стойками, значит вдвое.
+    const scored = e && e.y < trial.goalY + 30 && Math.abs(e.x - W / 2) < trial.half;
+    const pts_ = Math.round(meters * (scored ? 40 : 20));
+    score += pts_;
+    nums.push({ x: W / 2, y: H * 0.34, v: (scored ? 'в ворота! ' : '') + meters.toFixed(1) + ' м', t: 2.2, big: true });
+    blip(scored ? 720 : 400, 0.3, 'square', 0.14, scored ? 1200 : 220);
+    trial = null; trials++;
+    foes = [];
+    offerCards();
+}
+
 /* ─────────────────────────── Прокачка забега ───────────────────────────── */
 
 /**
@@ -1384,6 +1449,23 @@ function draw() {
     if (shake > 0) ctx.translate(rnd(-2.5, 2.5) * shake, rnd(-2.5, 2.5) * shake);
 
     drawGround();
+
+    if (trial) {
+        const y = trial.goalY, hw = trial.half;
+        ctx.strokeStyle = 'rgba(255,214,110,.55)'; ctx.lineWidth = 3;
+        ctx.setLineDash([10, 8]);
+        ctx.beginPath(); ctx.moveTo(W / 2 - hw, y); ctx.lineTo(W / 2 + hw, y); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 7; ctx.strokeStyle = '#e0b64a';
+        for (const sx of [W / 2 - hw, W / 2 + hw]) {
+            ctx.beginPath(); ctx.moveTo(sx, y - 26); ctx.lineTo(sx, y + 26); ctx.stroke();
+        }
+        ctx.fillStyle = '#9fb0c2'; ctx.textAlign = 'center';
+        ctx.font = '600 15px ui-sans-serif, sans-serif';
+        ctx.fillText('зацепи и закинь в ворота', W / 2, H * 0.30);
+        ctx.font = '700 22px ui-sans-serif, sans-serif'; ctx.fillStyle = '#e8eef5';
+        ctx.fillText((trial.best / METER).toFixed(1) + ' м', W / 2, H * 0.35);
+    }
 
     if (hooked && !hooked.dead) {
         const t = pts[pts.length - 1];
@@ -1742,7 +1824,7 @@ if (location.search.includes('flow')) {
 
         aim.down = true;
         let k = 0;
-        while (wave < 6 && k < 120 * 600) {
+        while (wave < 6 && k < 120 * 1500) {
             const t = k++ / 120;
             aim.x = W / 2 + Math.cos(t * 7) * 120;
             aim.y = H / 2 + Math.sin(t * 7) * 120;
@@ -1750,7 +1832,8 @@ if (location.search.includes('flow')) {
             hero.hp = hero.hpMax;             // бессмертие: проверяем прохождение, не бой
             step(1 / 120);
         }
-        log.push((wave >= 6 ? 'пять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
+        log.push('испытаний пройдено ' + trials +
+            ', ' + (wave >= 6 ? 'пять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
             ' за ' + Math.round(k / 120) + ' с, счёт ' + score + ', убито ' + kills +
             ', осталось врагов ' + foes.length + ', в очереди ' + spawnLeft);
         for (const e of foes) {
@@ -1813,6 +1896,7 @@ if (location.search.includes('test')) {
             Object.assign(S, w); Object.assign(BASE, w);
         }
         reset();
+        if (location.search.includes('trial')) startTrial();   // сразу показать испытание
         const w0 = parseInt((location.search.match(/[?&]wave=(\d+)/) || [])[1], 10);
         if (w0 > 1) { wave = w0 - 1; foes = []; startWave(); }   // ?wave=N — начать с волны N
         $('start').classList.remove('on');   // чтобы было видно арену
