@@ -800,6 +800,9 @@ function combat(dt) {
         blip(150, 0.16, 'square', 0.14, 320);
         buzz(25);
     }
+    for (const b of bits) {
+        if (b.t <= 0 && b.wet) stain(b.x, b.y, b.r * 1.9, b.wet, 0.42);
+    }
     bits = bits.filter((b) => b.t > 0);
     for (const n of nums) { n.t -= dt; n.y -= 26 * dt; }
     nums = nums.filter((n) => n.t > 0);
@@ -905,7 +908,29 @@ function kill(e, kx = 0, ky = 0, sure = false) {
     }
     const push = Math.min(700, Math.hypot(kx, ky) * 0.45);
     const dir = Math.atan2(ky, kx);
-    const n = e.boss ? 16 : 7;
+
+    // Брызги — то, чего не хватало: капли летят веером по удару и оставляют
+    // пятно там, где упали. Одни ошмётки давали аккуратную россыпь, а не
+    // разлёт: «весь экран в брызгах» получается именно из следов.
+    const wet = e.boss ? 26 : 16;
+    for (let k = 0; k < wet; k++) {
+        const a = dir + rnd(-0.9, 0.9);
+        const sp = rnd(220, 700) + push * 0.6;
+        bits.push({
+            x: e.x + rnd(-4, 4), y: e.y + rnd(-4, 4),
+            vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+            r: rnd(1.6, 3.4), ang: a, spin: rnd(-6, 6),
+            t: rnd(0.25, 0.6), boss: e.boss, wet: e.dark,
+        });
+    }
+    // И пятно под самим телом — широкое, а не точка.
+    for (let k = 0; k < 4; k++) {
+        stain(e.x + Math.cos(dir) * k * 9 + rnd(-7, 7),
+              e.y + Math.sin(dir) * k * 9 + rnd(-7, 7),
+              e.r * (1.5 - k * 0.2), e.dark, 0.5);
+    }
+
+    const n = e.boss ? 18 : 12;
     for (let k = 0; k < n; k++) {
         const a = k ? rnd(0, 6.283) : dir;                 // первый кусок летит по удару
         const sp = rnd(70, 300) + (k ? push * 0.5 : push);
@@ -913,7 +938,7 @@ function kill(e, kx = 0, ky = 0, sure = false) {
             x: e.x + rnd(-5, 5), y: e.y + rnd(-5, 5),
             vx: Math.cos(a) * sp + Math.cos(dir) * push * 0.4,
             vy: Math.sin(a) * sp + Math.sin(dir) * push * 0.4,
-            r: (k ? rnd(2, 4.5) : rnd(5, 7)) * (e.boss ? 1.7 : 1),
+            r: (k ? rnd(2, 5.5) : rnd(5.5, 8)) * (e.boss ? 1.7 : 1),
             ang: rnd(0, 6.283), spin: rnd(-16, 16),
             t: k ? rnd(0.55, 1.2) : 9,          // крупный кусок лежит и ждёт
             grab: !k && (sure || e.boss || rnd(0, 1) < 0.35), boss: e.boss,
@@ -1044,6 +1069,20 @@ function stick(a, b, len) {
 
 /** Толчок в верле задаётся сдвигом прошлой позиции. */
 const push = (q, ax, ay) => { q.px -= ax * DT; q.py -= ay * DT; };
+
+/** Поставить конкретного врага в конкретное место — для съёмки и отладки. */
+function spawnAt(kind, x, y) {
+    const k = KINDS[kind];
+    const hp = Math.round(k.hp * (1 + wave * 0.16));
+    foes.push({
+        x, y, kind, boss: false, hp, hp0: hp,
+        r: k.r, link: k.link, walk: k.walk, damp: k.damp, mass: k.mass, armor: k.armor,
+        color: k.color, dark: k.dark, chain: k.chain || 0, step: 0, down: 0, smack: 0,
+        iframe: 0, flash: 0, squeeze: 0, touch: 0, held: false, flying: 0,
+        p: body(x, y, k.link, k.chain || 3),
+    });
+    return foes[foes.length - 1];
+}
 
 function spawn() {
     const edge = Math.floor(rnd(0, 4));
@@ -1870,6 +1909,19 @@ function draw() {
     }
 
     for (const b of bits) {
+        if (b.wet) {                       // капля: мазок по направлению полёта
+            const sp = Math.hypot(b.vx, b.vy);
+            ctx.strokeStyle = b.wet;
+            ctx.globalAlpha = Math.min(1, b.t * 3);
+            ctx.lineWidth = b.r * 1.6; ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(b.x, b.y);
+            ctx.lineTo(b.x - b.vx / sp * Math.min(22, sp * 0.03),
+                       b.y - b.vy / sp * Math.min(22, sp * 0.03));
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            continue;
+        }
         ctx.save();
         ctx.globalAlpha = Math.min(1, b.t * 2);
         ctx.translate(b.x, b.y); ctx.rotate(b.ang);
@@ -2034,7 +2086,11 @@ let acc = 0, last = performance.now(), frame = 0;
 function loop(now) {
     let dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (slow > 0) { slow = Math.max(0, slow - dt); dt *= 0.3; }   // добивание видно
-    if (dead > 0) { dead -= dt; if (dead <= 0) showResult(); }
+    // При съёмке физику двигает снимающий, а рисовать надо по-прежнему:
+    // холст очищается при любом изменении размера, и перерисовать его иначе
+    // будет некому.
+    if (filming) { /* шаги делает window.naotmash.step */ }
+    else if (dead > 0) { dead -= dt; if (dead <= 0) showResult(); }
     else if (!paused && !menu && started) {
         acc += dt;
         let n = 0;
@@ -2190,6 +2246,73 @@ requestAnimationFrame(loop);
  * анимации, и печатает итог в консоль. Нужна потому, что проверять сборку
  * приходится на чужом телефоне, а ошибка боя проявляется только в бою.
  */
+/*
+ * Снаряд для витрины: игра сама ставит сцену, снимает её кто-то другой.
+ * Всё детерминировано — сид фиксирован, разгон отсчитан подшагами, жертва
+ * ставится ровно на пути кончика. Иначе яркий кадр пришлось бы ловить
+ * десятками дублей.
+ */
+const physStep = step;
+let filming = false;
+window.naotmash = {
+    /** Остановить собственный цикл игры: дальше кадры двигает снимающий. */
+    hold() { filming = true; return this; },
+    release() { filming = false; last = performance.now(); return this; },
+    /** Ставит сцену. 'удар' — разогнанный цеп встречает врага в упор. */
+    scene(opts) {
+        const o = opts || {};
+        filming = true;
+        srand(o.seed || 20260830);
+        const w = { ...WEAPONS[o.weapon || 0][2] };
+        w.len0 = w.len;
+        Object.assign(S, w); Object.assign(BASE, w);
+        resize();
+        if (!W || !H) { W = 450; H = 900; sc = 1; ctx.setTransform(1, 0, 0, 1, 0, 0); }
+        reset();
+        started = true; paused = false; menu = false; trial = null;
+        $('start').classList.remove('on');
+        $('over').classList.remove('on');
+        foes = []; boons = []; barrels = []; bits = []; nums = []; orbs = []; spawnLeft = 0;
+        hero.x = W / 2; hero.y = H * 0.60;
+        aim.down = true;
+        for (let i = 0; i < 130; i++) {          // разгон вхолостую
+            const t = i / 120;
+            aim.x = hero.x + Math.cos(t * 9) * 92;
+            aim.y = hero.y + Math.sin(t * 9) * 92;
+            physStep(1 / 120);
+        }
+        // Жертву ставим ровно туда, куда сейчас летит кончик.
+        const tip = pts[pts.length - 1];
+        const [vx, vy] = vel(tip);
+        const d = Math.hypot(vx, vy) || 1;
+        for (let i = 0; i < (o.crowd || 3); i++) {
+            spawnAt(o.kind || 'ходок',
+                tip.x + vx / d * (34 + i * 26) + (i % 2 ? 22 : -22),
+                tip.y + vy / d * (34 + i * 26));
+        }
+        filmT = 130 / 120;
+        return this;
+    },
+    /** Прокрутить сцену на dt секунд, продолжая замах. */
+    step(dt) {
+        const n = Math.max(1, Math.round((dt || 1 / 60) * 120));
+        for (let i = 0; i < n; i++) {
+            filmT += 1 / 120;
+            aim.x = hero.x + Math.cos(filmT * 9) * 92;
+            aim.y = hero.y + Math.sin(filmT * 9) * 92;
+            physStep(1 / 120);
+        }
+        return this;
+    },
+    render() { draw(); return this; },
+    state() {
+        return { врагов: foes.length, ошмётков: bits.length,
+            скорость: Math.round(Math.hypot(...vel(pts[pts.length - 1]))),
+            замедление: +slow.toFixed(2), тряска: +shake.toFixed(2) };
+    },
+};
+let filmT = 0;
+
 /*
  * Проверка прохождения: worm.html?flow прогоняет партию целиком — стартовое
  * окно, выбор оружия, пять волн, смерть, экран итога, «ещё раз». Нужна
