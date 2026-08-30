@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="robots" content="noindex">
+<!-- Единственная внешняя загрузка на странице. Счётчик отложенный: не
+     загрузится — игра работает как обычно. -->
+<script defer src="/pulse/script.js" data-website-id="de024048-c4c3-4639-bbdf-808c558f6d71"></script>
 <title>Наотмашь — проба физики</title>
 <style>
   :root { color-scheme: dark; }
@@ -208,6 +211,8 @@ const BIOMES = [
 
 /** Спрайты и текстуры вшиты в файл: подгружать их извне игре запрещено. */
 const SPR_SRC = {
+    'item-chest-closed': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NCA0NCI+PHBhdGggZD0iTTQgMTdRNiA1IDI3IDVRNDggNSA1MCAxN1YzOUg0WiIgZmlsbD0iIzNhMmYyMiIgc3Ryb2tlPSIjZDZhYTQ1IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik00IDE4SDUwTTIzIDE3SDMxVjI5SDIzWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDZhYTQ1IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'item-rune': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCAyOCI+PHBhdGggZD0iTTE0IDFMMjYgOEwyMyAyM0wxNCAyN0wzIDIxTDIgOFoiIGZpbGw9IiM1OTY2NmIiIHN0cm9rZT0iI2M4NmVlMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNOCAyMEwxNCA2TDIwIDIwTTEwIDE1SDE4IiBmaWxsPSJub25lIiBzdHJva2U9IiNlNWI4ZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
     'prop-rock': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTQiIGhlaWdodD0iMTE0IiB2aWV3Qm94PSIwIDAgMTE0IDExNCI+PHBhdGggZD0iTTE2IDI4TDQ5IDggOTEgMTggMTA3IDU1IDg5IDk4IDQ0IDEwNiA5IDc4WiIgZmlsbD0iIzU5NjI2ZSIgc3Ryb2tlPSIjMzAzNjNkIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMzEgMzFMNTQgMjAgODAgMzAgOTEgNTUgNzUgNzkgNDMgODYgMjQgNjdaIiBmaWxsPSIjNmQ3NjgxIi8+PC9zdmc+',
     'pickup-soul': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNyIgaGVpZ2h0PSIyNyIgdmlld0JveD0iMCAwIDI3IDI3Ij48cGF0aCBkPSJNMTQgMlEyNSA5IDE4IDE3UTE2IDIwIDIxIDI1UTggMjUgNSAxN1EyIDggMTQgMloiIGZpbGw9IiM4ZWYyYjAiIHN0cm9rZT0iIzNiOGI2MCIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+',
     'hero-body': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NCA1OCI+PHBhdGggZD0iTTExIDE3TDE5IDhIMzVMNDMgMTdMNDkgMjRMNDMgNTJIMTFMNSAyNFoiIGZpbGw9IiM3ZDVmM2QiIHN0cm9rZT0iIzRiMzkyNCIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTIwIDhRMjcgMyAzNCA4TDMyIDE3SDIyWiIgZmlsbD0iI2Q4YzM5YyIgc3Ryb2tlPSIjNmY2MDQ5IiBzdHJva2Utd2lkdGg9IjMiLz48L3N2Zz4=',
@@ -357,7 +362,8 @@ let hero = null, held = null, tense = false, slow = 0;
 let started = false, menu = false;
 let score = 0, kills = 0, record = 0;
 let hooked = null, thrown = 0, grabs = 0;
-let trial = null, trials = 0;   // испытание между волнами
+let trial = null, trials = 0;   // испытание: пока отложено, живёт под ?trial
+let boons = [], taken = 0;   // усиления и оружие, падающие прямо в бою
 const METER = 20;   // единиц мира в метре: викинг ростом чуть больше метра
 let armX = 0, armY = 1;   // куда смотрит древко у жёсткого оружия   // как быстро едет петля
 let theme = null, bossDone = false;
@@ -387,11 +393,11 @@ function reset() {
         const y = H / 2 + 24 + i * S.seg;
         pts.push({ x: W / 2, y, px: W / 2, py: y });
     }
-    foes = []; orbs = []; nums = []; trail = []; bits = [];
+    foes = []; orbs = []; nums = []; trail = []; bits = []; boons = [];
     rock = { x: W / 2, y: H * 0.28, vx: 0, vy: 0, r: 19 };
     aim = { x: W / 2, y: H / 2, down: false };
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
-    trial = null; trials = 0;
+    trial = null; trials = 0; boons = []; taken = 0;
     srand(Math.floor(Math.random() * 2147483647));
     startWave();
 }
@@ -599,6 +605,7 @@ function combat(dt) {
     for (const e of foes) {
         e.iframe -= dt;
         if (e.iframe > 0 || e === hooked) continue;   // за что держишься, то не бьёшь
+        if (e.probe === undefined) { e.probe = 0; e.probeSp = 0; e.probeArm = 0; }
         let hitPart = -1, hitSeg = -1;
         for (let i = 1; i < pts.length && hitPart < 0; i++) {
             const r = radiusAt(i);
@@ -639,7 +646,13 @@ function combat(dt) {
                 blip(1500, 0.05, 'square', 0.09);
                 continue;
             }
-            if (e.armor && sp < e.armor) {          // панцирь: касание не считается
+            // Порог брони выведен для хлыста, как когда-то порог урона: у
+            // жёсткого оружия скорость по своей природе ниже, и с общим
+            // числом копьё не пробивает панцирь ни при каком замахе.
+            e.probe++; e.probeSp = Math.max(e.probeSp, Math.round(sp));
+            const armor = e.armor * (S.rigid ? 0.45 : 1);
+            e.probeArm = Math.round(armor);
+            if (armor && sp < armor) {              // панцирь: касание не считается
                 e.iframe = 0.12; e.flash = 0.4;
                 nums.push({ x: e.x, y: e.y - 10, v: 'бронь', t: 0.45 });
                 blip(1500, 0.05, 'square', 0.09);
@@ -688,6 +701,15 @@ function combat(dt) {
             else if (Math.hypot(tvx, tvy) > 620) letGo(hooked);   // разогнал — швырнул
         }
     }
+
+    for (const b of boons) {
+        b.t -= dt;
+        const hand = pts[0];
+        const d = Math.min(Math.hypot(b.x - hand.x, b.y - hand.y),
+                           Math.hypot(b.x - hero.x, b.y - hero.y));
+        if (d < 26) { b.t = 0; takeBoon(b); }
+    }
+    boons = boons.filter((b) => b.t > 0);
 
     for (const o of orbs) {
         const hand = pts[0];
@@ -743,6 +765,7 @@ function hurt(e, dmg, kx, ky, part) {
     if (e.hp <= 0 && !e.dead) {
         kills++;
         score += Math.round((e.boss ? 300 : 12) * (1 + dmg / 45));
+        if (e.boss || kills % 8 === 0) dropBoon(e.x, e.y, 'усиление');
         kill(e, kx, ky);
     }
 }
@@ -859,7 +882,7 @@ const KINDS = {
     бегун:     { hp: 10, walk: 98, r: 8,  link: 9,  damp: 0.950, mass: 0.5, armor: 0,   color: '#dd8b3c', dark: '#a4602a' },
     толстяк:   { hp: 48, walk: 31, r: 15, link: 15, damp: 0.980, mass: 2.6, armor: 0,   color: '#9a63c4', dark: '#6d4590' },
     щитоносец: { hp: 26, walk: 44, r: 11, link: 11, damp: 0.970, mass: 1.5, armor: 700, color: '#4f93ad', dark: '#356878' },
-    туша:      { hp: 200, walk: 34, r: 26, link: 24, damp: 0.975, mass: 4.5, armor: 1300, color: '#59626e', dark: '#4d5561' },
+    туша:      { hp: 200, walk: 34, r: 26, link: 24, damp: 0.975, mass: 4.5, armor: 900,  color: '#59626e', dark: '#4d5561' },
     ползун:    { hp: 30, walk: 40, r: 13, link: 9,  damp: 0.985, mass: 1.8, armor: 0, color: '#6f9a4e', dark: '#4c6b35' },
     прыгун:    { hp: 14, walk: 78, r: 9,  link: 12, damp: 0.940, mass: 0.45, armor: 0, color: '#c0a458', dark: '#8a7436' },
     верзила:   { hp: 60, walk: 36, r: 17, link: 14, damp: 0.982, mass: 3.0, armor: 0, color: '#a35a3c', dark: '#6f3a26' },
@@ -960,7 +983,11 @@ function moveFoes(dt) {
             spawn(); spawnLeft--;
         }
     } else if (!foes.length && !paused && !trial) {
-        startTrial();
+        // Ни паузы, ни экрана: плотность растёт непрерывно, а награда за
+        // волну падает под ноги — её подбирают на бегу.
+        dropBoon(hero.x, hero.y - 40, wave % 3 === 0 ? 'оружие' : 'усиление');
+        score += 40 * wave;
+        startWave();
     }
 
     hero.iframe -= dt;
@@ -1001,14 +1028,23 @@ function moveFoes(dt) {
         e.flash = Math.max(0, e.flash - dt * 5);
         e.squeeze = Math.max(0, e.squeeze - dt * 4);
         e.touch -= dt;
-        if (d < e.r + HERO_R && e.touch <= 0 && hero.iframe <= 0 && !dead) {
+        // Между досягаемостью тела и дугой оружия был зазор в десяток единиц,
+        // и висящего в нём врага не брало ничто: ни удар, ни толчок.
+        if (d < e.r + HERO_R + 14 && e.touch <= 0 && hero.iframe <= 0 && !dead) {
             // Оружие висит на вытянутой руке и метёт дугу снаружи, поэтому
             // прижавшегося вплотную нечем достать. Значит, столкновение с
             // героем должно отбрасывать врага на длину оружия, а не на шаг:
             // иначе он приклеивается и волна не кончается никогда.
             e.touch = 1; hero.iframe = 0.9;
             e.down = Math.max(e.down, 0.5);
-            for (const q of e.p) push(q, -dx / d * 1400, -dy / d * 1400);
+            // Толчок делится на массу, как и удар: иначе тушу отбрасывает так
+            // же далеко, как бегуна, и она уходит из досягаемости навсегда.
+            const shove = 1400 / e.mass;
+            for (const q of e.p) push(q, -dx / d * shove, -dy / d * shove);
+            // Оружие не достаёт вплотную, поэтому налетевший получает от самого
+            // героя. Даром это не даётся: за размен платят сердцем, так что
+            // толкаться специально невыгодно — но приклеиться уже нельзя.
+            if (!e.boss) hurt(e, 14, -dx / d * 120, -dy / d * 120);
             hero.hp -= 1; shake = 1;
             blip(95, 0.28, 'sawtooth', 0.2, 45); buzz(80);
             if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
@@ -1187,6 +1223,42 @@ function blip(f, dur, type, vol, to) {
 }
 
 const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* не везде есть */ } };
+
+/* ─────────────────────────── Награда на бегу ──────────────────────────── */
+
+/**
+ * Ориентиры — Vampire Survivors и «огурчик»: там нет экранов между волнами,
+ * награда капает под ноги и подбирается не останавливаясь. Поэтому карточки
+ * прокачки заменены на то, что валяется на арене.
+ */
+function dropBoon(x, y, kind) {
+    const idx = kind === 'оружие'
+        ? Math.floor(rnd(0, WEAPONS.length))
+        : Math.floor(rnd(0, UPGRADES.length));
+    boons.push({ x, y, kind, idx, t: 26, bob: rnd(0, 6.283) });
+}
+
+function takeBoon(b) {
+    taken++;
+    if (b.kind === 'оружие') {
+        const w = { ...WEAPONS[b.idx][2] };
+        w.len0 = w.len;
+        Object.assign(S, w);
+        segNow = S.seg;
+        while (pts.length > S.len) pts.pop();
+        while (pts.length < S.len) {
+            const t = pts[pts.length - 1];
+            pts.push({ x: t.x, y: t.y, px: t.px, py: t.py });
+        }
+        nums.push({ x: b.x, y: b.y - 14, v: WEAPONS[b.idx][0], t: 1.4, big: true });
+        blip(520, 0.2, 'square', 0.15, 900);
+    } else {
+        UPGRADES[b.idx][2]();
+        nums.push({ x: b.x, y: b.y - 14, v: UPGRADES[b.idx][0], t: 1.4, big: true });
+        blip(880, 0.14, 'sine', 0.12, 1400);
+    }
+    buzz(20);
+}
 
 /* ─────────────────────────── Испытание ────────────────────────────────── */
 
@@ -1471,6 +1543,15 @@ function draw() {
         const t = pts[pts.length - 1];
         ctx.strokeStyle = 'rgba(120,255,190,.55)'; ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.moveTo(t.x, t.y); ctx.lineTo(hooked.x, hooked.y); ctx.stroke();
+    }
+
+    for (const b of boons) {
+        const im = SPR[b.kind === 'оружие' ? 'item-chest-closed' : 'item-rune'];
+        const y = b.y + Math.sin(frame * 0.06 + b.bob) * 3;
+        ctx.strokeStyle = b.kind === 'оружие' ? 'rgba(255,214,110,.8)' : 'rgba(140,230,255,.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(b.x, y, 16, 0, 7); ctx.stroke();
+        if (ready(im)) drawPart(im, b.x, y, 26 / im.naturalWidth, 0);
     }
 
     for (const o of orbs) {
@@ -1832,14 +1913,16 @@ if (location.search.includes('flow')) {
             hero.hp = hero.hpMax;             // бессмертие: проверяем прохождение, не бой
             step(1 / 120);
         }
-        log.push('испытаний пройдено ' + trials +
+        log.push('подобрано наград ' + taken +
             ', ' + (wave >= 6 ? 'пять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
             ' за ' + Math.round(k / 120) + ' с, счёт ' + score + ', убито ' + kills +
             ', осталось врагов ' + foes.length + ', в очереди ' + spawnLeft);
         for (const e of foes) {
             log.push('  живой: ' + e.kind + ' hp ' + Math.round(e.hp) + '/' + e.hp0 +
                 ', лежит ' + e.down.toFixed(1) + ', летит ' + e.flying.toFixed(1) +
-                ', до героя ' + Math.round(Math.hypot(e.x - hero.x, e.y - hero.y)));
+                ', до героя ' + Math.round(Math.hypot(e.x - hero.x, e.y - hero.y)) +
+                ', касаний ' + (e.probe || 0) + ', макс. скорость ' + (e.probeSp || 0) +
+                ' при броне ' + (e.probeArm || 0) + ', оружие ' + (S.rigid ? 'жёсткое' : 'гибкое'));
         }
 
         hero.hp = 0;
