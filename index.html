@@ -22,6 +22,8 @@
   }
   #hud b { font-weight: 600; color: #fff; }
   #hud .dim { color: #7c8b9c; }
+  #gauges { display: none; }
+  #gauges.on { display: block; }
   #speedbar { width: 132px; height: 5px; margin: 5px 0 7px; border-radius: 3px; background: #1e2833; overflow: hidden; }
   #speedfill { height: 100%; width: 0; background: #35506b; transition: background .12s; }
 
@@ -46,7 +48,14 @@
 
   .modal {
     position: absolute; inset: 0; display: none; flex-direction: column;
-    align-items: center; justify-content: center; gap: 9px; padding: 18px;
+    align-items: center; gap: 9px;
+    /* сверху оставлено место под кнопки сайта, иначе они лягут на заголовок */
+    padding: calc(64px + env(safe-area-inset-top, 0px)) 18px 18px;
+    /* Содержимое выше экрана при justify-content:center обрезается сверху, и
+       заголовок становится недостижим. flex-start — запасной путь для старых
+       браузеров, safe center центрует, только когда всё помещается. */
+    justify-content: flex-start;
+    justify-content: safe center;
     background: #0d1014e6; backdrop-filter: blur(3px); z-index: 5;
   }
   .modal.on { display: flex; }
@@ -106,11 +115,13 @@
 
 <div id="hud">
   <div><span class="dim">волна</span> <b id="wv">1</b> <span class="dim" id="th"></span> <span class="dim">· счёт</span> <b id="sc">0</b></div>
-  <div><span class="dim">оружие</span> <b id="sp">0</b> <span class="dim">px/с</span></div>
-  <div id="speedbar"><div id="speedfill"></div></div>
-  <div><span class="dim">макс. по телу</span> <b id="mx">0</b></div>
-  <div><span class="dim">длина оружия</span> <b id="ln">7</b></div>
-  <div><span class="dim">лучший удар</span> <b id="best">0</b></div>
+  <div id="gauges">
+    <div><span class="dim">оружие</span> <b id="sp">0</b> <span class="dim">px/с</span></div>
+    <div id="speedbar"><div id="speedfill"></div></div>
+    <div><span class="dim">макс. по телу</span> <b id="mx">0</b></div>
+    <div><span class="dim">длина оружия</span> <b id="ln">7</b></div>
+    <div><span class="dim">лучший удар</span> <b id="best">0</b></div>
+  </div>
 </div>
 
 <div id="cards" class="modal"></div>
@@ -1110,7 +1121,7 @@ function showResult() {
         '<li>лучший удар <b>' + Math.round(best) + '</b></li>' +
         '<li>счёт <b>' + score + '</b>' + (beaten ? '' : ' · рекорд <b>' + record + '</b>') + '</li>' +
         '</ul>' +
-        '<button data-again="1"><b>ещё раз</b><span>вернуться к выбору оружия</span></button>';
+        '<button data-again="1" aria-label="Ещё раз"><b>ещё раз</b><span>вернуться к выбору оружия</span></button>';
     $('over').classList.add('on');
 }
 
@@ -1119,7 +1130,7 @@ function showStart() {
     const el = $('start');
     el.innerHTML = '<h1>Наотмашь</h1>' + RULES +
         (record ? '<p class="rec">рекорд ' + record + '</p>' : '') +
-        WEAPONS.map((w, i) => '<button data-w="' + i + '">' +
+        WEAPONS.map((w, i) => '<button data-w="' + i + '" aria-label="' + w[0] + '">' +
             '<span class="ic">' + (ICON[w[2].sprite] || '') + '</span>' +
             '<span class="tx"><b>' + w[0] + '</b><span>' + w[1] + '</span></span></button>').join('');
     el.classList.add('on');
@@ -1190,7 +1201,7 @@ function offerCards() {
     while (pick.length < 3 && pool.length) pick.push(pool.splice(Math.floor(rnd(0, pool.length)), 1)[0]);
     const el = $('cards');
     el.innerHTML = '<h2>Волна ' + wave + ' зачищена</h2>' +
-        pick.map((u, i) => '<button data-u="' + i + '">' +
+        pick.map((u, i) => '<button data-u="' + i + '" aria-label="' + u[0] + '">' +
             '<span class="ic">' + (ICON[u[3]] || '') + '</span>' +
             '<span class="tx"><b>' + u[0] + '</b><span>' + u[1] + '</span></span></button>').join('');
     el.classList.add('on');
@@ -1639,6 +1650,7 @@ const gearFace = () => { $('gear').innerHTML = menu ? '▶' : (ICON.gear || '⚙
 gearFace();
 $('gear').addEventListener('click', () => {
     menu = !$('panel').classList.toggle('off');
+    $('gauges').classList.toggle('on', menu);   // линейки живут рядом с ползунками
     gearFace();
 });
 
