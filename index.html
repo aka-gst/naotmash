@@ -212,6 +212,10 @@ const BIOMES = [
 
 /** Спрайты и текстуры вшиты в файл: подгружать их извне игре запрещено. */
 const SPR_SRC = {
+    'obstacle-pillar-broken': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MiA3MiI+PHBhdGggZD0iTTEyIDYxTDE3IDUxTDMxIDQ5TDI1IDM0TDM5IDI4TDQ4IDQzTDYxIDQ4TDY1IDYxWiIgZmlsbD0iIzU5NjY2YiIgc3Ryb2tlPSIjMzY0MzRhIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yNiAzNEwyMCAxN0wzMCA1TDQzIDlMMzkgMjgiIGZpbGw9IiM1OTY2NmIiIHN0cm9rZT0iIzM2NDM0YSIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'obstacle-pillar': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDcyIDcyIj48cGF0aCBkPSJNMTkgNkg1M0w1OCAxNkw1MiA1N0w2MiA2NkgxMEwyMCA1N0wxNCAxNloiIGZpbGw9IiM4YjkxOTgiIHN0cm9rZT0iIzU1NWI2MSIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMTcgMThINTVNMjAgNTVINTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2JlYzhkNCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'obstacle-crate-broken': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MiA3MiI+PHBhdGggZD0iTTcgNTlMMTQgMzZMMjkgNDJMMzcgMjJMNDkgNDBMNjQgMzVMNjUgNjFaIiBmaWxsPSIjNWI0NjMwIiBzdHJva2U9IiMzNjQzNGEiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTEzIDM2TDQgMjRNMzcgMjNMMzMgN001MSA0MUw2NiAyMSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYTliZGJhIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
+    'obstacle-crate': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDcyIDcyIj48cGF0aCBkPSJNOCA4SDY0VjY0SDhaIiBmaWxsPSIjN2E1YTM0IiBzdHJva2U9IiMzZTJkMWEiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTEyIDEyTDYwIDYwTTYwIDEyTDEyIDYwIiBmaWxsPSJub25lIiBzdHJva2U9IiNjZGFhNzMiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
     'obstacle-barrel-broken': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MiA3MiI+PHBhdGggZD0iTTggNThMMTQgNDJMMjcgNDdMMzQgMzFMNDYgNDRMNjAgMzhMNjQgNjFaIiBmaWxsPSIjM2EyZjIyIiBzdHJva2U9IiMzNjQzNGEiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTE1IDUwTDUgMzVNMzEgNDZMMjggMjRNNDggNDlMNjIgMjkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzViNDYzMCIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
     'obstacle-barrel': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDcyIDcyIj48cGF0aCBkPSJNMTYgOFEzNiAyIDU2IDhMNjAgNjJRMzYgNjkgMTIgNjJaIiBmaWxsPSIjN2E1YTM0IiBzdHJva2U9IiMzZTJkMWEiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTE0IDIwUTM2IDI3IDU4IDIwTTEzIDQ5UTM2IDU2IDU5IDQ5IiBmaWxsPSJub25lIiBzdHJva2U9IiM4YjkxOTgiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
     'item-chest-closed': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NCA0NCI+PHBhdGggZD0iTTQgMTdRNiA1IDI3IDVRNDggNSA1MCAxN1YzOUg0WiIgZmlsbD0iIzNhMmYyMiIgc3Ryb2tlPSIjZDZhYTQ1IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik00IDE4SDUwTTIzIDE3SDMxVjI5SDIzWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDZhYTQ1IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
@@ -983,7 +987,7 @@ function spawn() {
         r: k.r, link: k.link, walk: k.walk, damp: k.damp, mass: k.mass, armor: k.armor,
         color: k.color, dark: k.dark,
         iframe: 0, flash: 0, squeeze: 0, touch: 0,
-        chain: k.chain || 0, step: 0, down: 0,
+        chain: k.chain || 0, step: 0, down: 0, smack: 0,
         p: body(x, y, k.link, k.chain || 3), held: false, flying: 0,
     });
 }
@@ -1036,9 +1040,21 @@ function moveFoes(dt) {
         }
         const m = e.r * 0.7;
         for (const q of e.p) {
-            q.x = Math.max(PAD + m, Math.min(W - PAD - m, q.x));
-            q.y = Math.max(PAD + m, Math.min(H - PAD - m, q.y));
+            const nx = Math.max(PAD + m, Math.min(W - PAD - m, q.x));
+            const ny = Math.max(PAD + m, Math.min(H - PAD - m, q.y));
+            // Влетевшего в стену бьёт о стену: у броска появляется адрес.
+            if (q === e.p[1] && (nx !== q.x || ny !== q.y) && e.flying > 0 && e.smack <= 0) {
+                const sp = Math.hypot(q.x - q.px, q.y - q.py) / DT;
+                if (sp > 500) {
+                    e.smack = 0.4;
+                    hurt(e, sp / 34, 0, 0);
+                    shake = Math.min(1, shake + 0.4);
+                    blip(120, 0.2, 'square', 0.16, 60);
+                }
+            }
+            q.x = nx; q.y = ny;
         }
+        e.smack -= dt;
         e.x = e.p[1].x; e.y = e.p[1].y;
         e.flash = Math.max(0, e.flash - dt * 5);
         e.squeeze = Math.max(0, e.squeeze - dt * 4);
@@ -1246,16 +1262,52 @@ const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* не везд
  * вокруг, включая героя, — поэтому стоять рядом невыгодно, и арена
  * перестаёт быть пустой комнатой.
  */
+/** Что стоит на арене. Твёрдое мешает ходить, ломкое ломается, яма глотает. */
+const PROPS = {
+    бочка: { r: 17, hp: 1,  solid: true,  boom: true,  spr: 'obstacle-barrel' },
+    ящик:  { r: 18, hp: 1,  solid: true,  boom: false, spr: 'obstacle-crate' },
+    столб: { r: 15, hp: 3,  solid: true,  boom: false, spr: 'obstacle-pillar' },
+    яма:   { r: 26, hp: 0,  solid: false, boom: false, spr: null },
+};
+
 function seedBarrels() {
     barrels = [];
-    for (let i = 0; i < 3 + Math.floor(wave / 3); i++) {
-        barrels.push({ x: rnd(60, W - 60), y: rnd(90, H - 90), r: 17, dead: false });
-    }
+    const put = (kind, n) => {
+        for (let i = 0; i < n; i++) {
+            const k = PROPS[kind];
+            barrels.push({ kind, x: rnd(70, W - 70), y: rnd(100, H - 100),
+                r: k.r, hp: k.hp, dead: false });
+        }
+    };
+    put('бочка', 2 + Math.floor(wave / 4));
+    put('ящик', 2);
+    put('столб', 1 + Math.floor(wave / 5));
+    put('яма', 1 + Math.floor(wave / 6));
+}
+
+/** Провалившегося в яму не спасает ничего: это не урон, а конец. */
+function swallow(e) {
+    if (e.dead || e.boss) return;
+    nums.push({ x: e.x, y: e.y - 12, v: 'в яму!', t: 0.9, big: true });
+    blip(140, 0.4, 'sine', 0.16, 50);
+    score += 25;
+    kills++;
+    kill(e);
 }
 
 function blowBarrel(b) {
     b.dead = true;
     blown++;
+    if (!PROPS[b.kind].boom) {         // ящик и столб просто рассыпаются
+        for (let k = 0; k < 8; k++) {
+            const a = rnd(0, 6.283), sp = rnd(120, 340);
+            bits.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                r: rnd(2, 4.5), ang: a, spin: rnd(-14, 14), t: rnd(0.4, 0.9), boss: true });
+        }
+        blip(190, 0.18, 'square', 0.14, 70);
+        shake = Math.min(1, shake + 0.35);
+        return;
+    }
     shake = 1;
     slow = Math.max(slow, 0.1);
     blip(90, 0.45, 'sawtooth', 0.28, 40);
@@ -1279,17 +1331,45 @@ function blowBarrel(b) {
 
 function tickBarrels(dt) {
     for (const b of barrels) {
+        const k = PROPS[b.kind];
+        if (b.kind === 'яма') {
+            for (const e of foes) {       // яма глотает сбитых и брошенных
+                if (e.dead || (e.flying <= 0 && e.down <= 0)) continue;
+                if (Math.hypot(e.x - b.x, e.y - b.y) < b.r) swallow(e);
+            }
+            continue;
+        }
         if (b.dead) continue;
+
+        // Твёрдое мешает ходить: враг обходит, а не проходит насквозь.
+        if (k.solid) {
+            for (const e of foes) {
+                if (e.dead) continue;
+                for (const q of e.p) {
+                    const dx = q.x - b.x, dy = q.y - b.y;
+                    const d = Math.hypot(dx, dy) || 1;
+                    const over = b.r + e.r * 0.6 - d;
+                    if (over > 0) { q.x += dx / d * over; q.y += dy / d * over; }
+                }
+                e.x = e.p[1].x; e.y = e.p[1].y;
+            }
+        }
+
         for (let i = 1; i < pts.length; i++) {
             const p = pts[i];
             if (!swept(p, { x: b.x, y: b.y, r: b.r }, radiusAt(i))) continue;
             const [vx, vy] = vel(p);
-            if (Math.hypot(vx, vy) > 420) { blowBarrel(b); break; }
+            if (Math.hypot(vx, vy) > 420 && --b.hp <= 0) { blowBarrel(b); }
+            break;
         }
         if (b.dead) continue;
         for (const e of foes) {           // и брошенным телом тоже
             if (e.flying <= 0 || e.dead) continue;
-            if (Math.hypot(e.x - b.x, e.y - b.y) < b.r + e.r) { blowBarrel(b); break; }
+            if (Math.hypot(e.x - b.x, e.y - b.y) < b.r + e.r) {
+                hurt(e, 22, 0, 0);        // и телу достаётся
+                if (--b.hp <= 0) blowBarrel(b);
+                break;
+            }
         }
     }
 }
@@ -1616,7 +1696,15 @@ function draw() {
     }
 
     for (const b of barrels) {
-        const im = SPR[b.dead ? 'obstacle-barrel-broken' : 'obstacle-barrel'];
+        if (b.kind === 'яма') {
+            ctx.fillStyle = '#05070a';
+            ctx.beginPath(); ctx.ellipse(b.x, b.y, b.r, b.r * 0.72, 0, 0, 7); ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.ellipse(b.x, b.y, b.r + 2, b.r * 0.72 + 2, 0, 0, 7); ctx.stroke();
+            continue;
+        }
+        const base = PROPS[b.kind].spr;
+        const im = SPR[b.dead ? base + '-broken' : base];
         if (ready(im)) drawPart(im, b.x, b.y, (b.r * 2.4) / im.naturalWidth, 0);
     }
 
