@@ -782,7 +782,7 @@ function hurt(e, dmg, kx, ky, part) {
     if (e.hp <= 0 && !e.dead) {
         kills++;
         score += Math.round((e.boss ? 300 : 12) * (1 + dmg / 45));
-        if (e.boss || kills % 8 === 0) dropBoon(e.x, e.y, 'усиление');
+        if (e.boss || kills % 5 === 0) dropBoon(e.x, e.y, 'усиление');
         kill(e, kx, ky);
     }
 }
@@ -1006,9 +1006,10 @@ function moveFoes(dt) {
             spawnTimer = Math.max(0.2, 0.9 - wave * 0.05);
             spawn(); spawnLeft--;
         }
-    } else if (!foes.length && !paused && !trial) {
-        // Ни паузы, ни экрана: плотность растёт непрерывно, а награда за
-        // волну падает под ноги — её подбирают на бегу.
+    } else if (foes.length <= 2 && !paused && !trial) {
+        // Волна не «зачищается»: следующая начинается, пока предыдущая ещё
+        // догорает. В референсе давление не спадает ни на секунду, а у нас
+        // между волнами был провал — именно он и читался как «не нарастает».
         dropBoon(hero.x, hero.y - 40, wave % 3 === 0 ? 'оружие' : 'усиление');
         score += 40 * wave;
         startWave();
