@@ -373,6 +373,8 @@ let hero = null, held = null, tense = false, slow = 0;
 let started = false, menu = false;
 let score = 0, kills = 0, record = 0;
 let hooked = null, thrown = 0, grabs = 0;
+let gripped = null, gripT = 0;   // щитоносец, вцепившийся в оружие
+let cntOver = 0, cntGrip = 0, cntBoom = 0;   // сколько раз сработали повадки
 let trial = null, trials = 0;   // испытание: пока отложено, живёт под ?trial
 let boons = [], taken = 0;   // усиления и оружие, падающие прямо в бою
 let barrels = [], blown = 0;   // бочки: бьются от удара и от брошенного тела
@@ -410,6 +412,8 @@ function reset() {
     aim = { x: W / 2, y: H / 2, down: false };
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
     trial = null; trials = 0; boons = []; taken = 0; barrels = []; blown = 0;
+    gripped = null; hooked = null;
+    cntOver = 0; cntGrip = 0; cntBoom = 0;
     srand(Math.floor(Math.random() * 2147483647));
     startWave();
 }
@@ -645,11 +649,29 @@ function combat(dt) {
             }
             const floor = S.rigid ? 150 : HIT_SPEED;
             if (sp < floor) {
+                // Щитоносец делает обратное нашему захвату: он ловит оружие
+                // сам. Освободиться можно только рывком — медленно не выйдет.
                 // Медленное касание не бьёт — оно цепляет: цепь обматывает.
                 if (!hooked && !e.boss && !e.held && i >= pts.length - BLADE) {
                     hooked = e; e.held = true; grabs++;
                     blip(320, 0.1, 'square', 0.1, 180);
                 }
+                continue;
+            }
+            // Ползун стелется по земле: древко и цепь проходят над ним,
+            // достаёт только боевая часть. Значит, по нему надо целиться.
+            // Щитоносец ловит оружие, если оно летит недостаточно быстро:
+            // либо бей его от души, либо будешь вырываться.
+            if (e.kind === 'щитоносец' && sp < 900 && !gripped) {
+                gripped = e; gripT = 0; cntGrip++;
+                e.held = true; e.iframe = 0.3;
+                play('натяг', 0.45, 0.8);
+                nums.push({ x: e.x, y: e.y - 12, v: 'схватил!', t: 0.9, big: true });
+                continue;
+            }
+            if (e.kind === 'ползун' && i < pts.length - BLADE) {
+                e.iframe = 0.12;
+                nums.push({ x: e.x, y: e.y - 10, v: 'поверху', t: 0.4 }); cntOver++;
                 continue;
             }
             if (e.chain && hitPart > 0) {           // членистого берёт только голова
@@ -697,6 +719,29 @@ function combat(dt) {
     }
 
     // Обвивка: замкнул тело в кольцо — всё внутри стягивается и трещит.
+    if (gripped) {
+        gripT += dt;
+        const t = pts[pts.length - 1];
+        if (gripped.dead || gripT > 6) { gripped.held = false; gripped = null; }
+        else {
+            // Оружие притянуто к нему и почти не движется, пока не рванёшь.
+            for (const q of [t, pts[pts.length - 2]]) {
+                q.x += (gripped.x - q.x) * 7 * dt;
+                q.y += (gripped.y - q.y) * 7 * dt;
+            }
+            const [hx2, hy2] = vel(pts[0]);
+            if (Math.hypot(hx2, hy2) > 780) {          // рывок рукой освобождает
+                hurt(gripped, 26, (t.x - gripped.x) * 6, (t.y - gripped.y) * 6);
+                gripped.down = Math.max(gripped.down, 0.8);
+                gripped.held = false;
+                nums.push({ x: gripped.x, y: gripped.y - 14, v: 'вырвал!', t: 0.9, big: true });
+                play('отрыв', 0.45, 1.2);
+                shake = Math.min(1, shake + 0.4);
+                gripped = null;
+            }
+        }
+    }
+
     if (hooked) {
         const t = pts[pts.length - 1];
         const [tvx, tvy] = vel(t);
@@ -830,6 +875,29 @@ function flying(e, dt) {
 /** Импульс последнего удара уносит ошмётки: видно, откуда прилетело. */
 function kill(e, kx = 0, ky = 0, sure = false) {
     e.dead = true;
+    if (e === gripped) { gripped = null; }
+    // Колючий разлетается иглами: убивать его выгодно посреди толпы.
+    if (e.kind === 'колючий') {
+        cntBoom++;
+        blip(300, 0.25, 'square', 0.18, 90);
+        shake = Math.min(1, shake + 0.5);
+        for (const o of foes) {
+            if (o === e || o.dead) continue;
+            const d = Math.hypot(o.x - e.x, o.y - e.y);
+            if (d > 78) continue;
+            const f = 1 - d / 78;
+            hurt(o, 26 * f, (o.x - e.x) / (d || 1) * 700 * f, (o.y - e.y) / (d || 1) * 700 * f);
+        }
+        if (Math.hypot(hero.x - e.x, hero.y - e.y) < 46 && hero.iframe <= 0 && !dead) {
+            hero.iframe = 0.9; hero.hp -= 1;
+            if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
+        }
+        for (let k = 0; k < 12; k++) {
+            const a = rnd(0, 6.283), sp2 = rnd(200, 480);
+            bits.push({ x: e.x, y: e.y, vx: Math.cos(a) * sp2, vy: Math.sin(a) * sp2,
+                r: rnd(2, 4), ang: a, spin: rnd(-14, 14), t: rnd(0.4, 0.9), boss: false });
+        }
+    }
     stain(e.x, e.y, e.r * 1.4, e.dark, 0.5);
     blip(e.boss ? 180 : 640, e.boss ? 0.5 : 0.09, 'square', e.boss ? 0.22 : 0.07, e.boss ? 50 : 0);
     for (let k = 0; k < (e.boss ? 8 : 1); k++) {
@@ -1188,6 +1256,7 @@ const RULES = '<ul>' +
     '<li><b>Второй палец</b> (на компе — <b>Shift</b>) подбирает оружие: оно подтягивается к руке и твердеет. Так наводят удар.</li>' +
     '<li>Светящиеся куски врагов можно подобрать: это временное оружие.</li>' +
     '<li><b>Медленное касание не бьёт, а цепляет.</b> Зацепил — разгонись и отпусти: враг улетит в остальных.</li>' +
+    '<li>Ползуна достаёт только кончик, щитоносец ловит оружие — вырывайся рывком, колючий взрывается от смерти.</li>' +
     '</ul>';
 
 function showResult() {
@@ -1746,6 +1815,14 @@ function draw() {
         ctx.fillText((trial.best / METER).toFixed(1) + ' м', W / 2, H * 0.35);
     }
 
+    if (gripped && !gripped.dead) {
+        const t = pts[pts.length - 1];
+        ctx.strokeStyle = 'rgba(255,120,120,.75)'; ctx.lineWidth = 3;
+        ctx.setLineDash([6, 5]);
+        ctx.beginPath(); ctx.moveTo(t.x, t.y); ctx.lineTo(gripped.x, gripped.y); ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
     if (hooked && !hooked.dead) {
         const t = pts[pts.length - 1];
         ctx.strokeStyle = 'rgba(120,255,190,.55)'; ctx.lineWidth = 2.5;
@@ -2132,7 +2209,7 @@ if (location.search.includes('flow')) {
 
         aim.down = true;
         let k = 0;
-        while (wave < 6 && k < 120 * 1500) {
+        while (wave < 10 && k < 120 * 1500) {   // до девятой: там уже есть все повадки
             const t = k++ / 120;
             aim.x = W / 2 + Math.cos(t * 7) * 120;
             aim.y = H / 2 + Math.sin(t * 7) * 120;
@@ -2140,8 +2217,9 @@ if (location.search.includes('flow')) {
             hero.hp = hero.hpMax;             // бессмертие: проверяем прохождение, не бой
             step(1 / 120);
         }
-        log.push('подобрано наград ' + taken + ', бочек взорвано ' + blown +
-            ', ' + (wave >= 6 ? 'пять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
+        log.push('поверху ' + cntOver + ', схватов ' + cntGrip + ', взрывов колючих ' + cntBoom +
+            ', подобрано наград ' + taken + ', бочек взорвано ' + blown +
+            ', ' + (wave >= 10 ? 'девять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
             ' за ' + Math.round(k / 120) + ' с, счёт ' + score + ', убито ' + kills +
             ', осталось врагов ' + foes.length + ', в очереди ' + spawnLeft);
         for (const e of foes) {
