@@ -166,6 +166,7 @@ const S = {
     tipWeight: 0.30,  // насколько тяжёлый кончик тянет за собой тело
     drag: 0.992,      // сопротивление среды за подшаг
     hand: 5,          // инерция руки: 1 — рывком, 9 — вязко
+    reach: 76,        // длина руки: у меча короткая, у цепа длинная
     stiff: 1,         // мягкая цепь копит энергию как пружина и щёлкает сильнее
     bend: 5,          // упругость на излом: 0 — цепь, 9 — почти прут
     bladeW: 13,       // толщина боевой части
@@ -211,6 +212,8 @@ const BIOMES = [
 
 /** Спрайты и текстуры вшиты в файл: подгружать их извне игре запрещено. */
 const SPR_SRC = {
+    'obstacle-barrel-broken': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MiA3MiI+PHBhdGggZD0iTTggNThMMTQgNDJMMjcgNDdMMzQgMzFMNDYgNDRMNjAgMzhMNjQgNjFaIiBmaWxsPSIjM2EyZjIyIiBzdHJva2U9IiMzNjQzNGEiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTE1IDUwTDUgMzVNMzEgNDZMMjggMjRNNDggNDlMNjIgMjkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzViNDYzMCIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4K',
+    'obstacle-barrel': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDcyIDcyIj48cGF0aCBkPSJNMTYgOFEzNiAyIDU2IDhMNjAgNjJRMzYgNjkgMTIgNjJaIiBmaWxsPSIjN2E1YTM0IiBzdHJva2U9IiMzZTJkMWEiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTE0IDIwUTM2IDI3IDU4IDIwTTEzIDQ5UTM2IDU2IDU5IDQ5IiBmaWxsPSJub25lIiBzdHJva2U9IiM4YjkxOTgiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
     'item-chest-closed': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NCA0NCI+PHBhdGggZD0iTTQgMTdRNiA1IDI3IDVRNDggNSA1MCAxN1YzOUg0WiIgZmlsbD0iIzNhMmYyMiIgc3Ryb2tlPSIjZDZhYTQ1IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik00IDE4SDUwTTIzIDE3SDMxVjI5SDIzWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDZhYTQ1IiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPgo=',
     'item-rune': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyOCAyOCI+PHBhdGggZD0iTTE0IDFMMjYgOEwyMyAyM0wxNCAyN0wzIDIxTDIgOFoiIGZpbGw9IiM1OTY2NmIiIHN0cm9rZT0iI2M4NmVlMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNOCAyMEwxNCA2TDIwIDIwTTEwIDE1SDE4IiBmaWxsPSJub25lIiBzdHJva2U9IiNlNWI4ZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+Cg==',
     'prop-rock': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTQiIGhlaWdodD0iMTE0IiB2aWV3Qm94PSIwIDAgMTE0IDExNCI+PHBhdGggZD0iTTE2IDI4TDQ5IDggOTEgMTggMTA3IDU1IDg5IDk4IDQ0IDEwNiA5IDc4WiIgZmlsbD0iIzU5NjI2ZSIgc3Ryb2tlPSIjMzAzNjNkIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMzEgMzFMNTQgMjAgODAgMzAgOTEgNTUgNzUgNzkgNDMgODYgMjQgNjdaIiBmaWxsPSIjNmQ3NjgxIi8+PC9zdmc+',
@@ -342,7 +345,11 @@ for (const k in GROUND) {
     groundTile[k] = im;
 }
 
-/** На сколько рука отходит от тела. Дальше — герой идёт за оружием. */
+/**
+ * На сколько рука отходит от тела. Дальше — герой идёт за оружием.
+ * Это свойство оружия, а не героя: меч должен сидеть у тела, цеп — висеть
+ * далеко. Общая константа делала любой клинок «на длинной палке».
+ */
 const REACH = 76;
 const HERO_SPEED = 165;   // единиц мира в секунду, шагом
 const HERO_R = 11;
@@ -364,6 +371,7 @@ let score = 0, kills = 0, record = 0;
 let hooked = null, thrown = 0, grabs = 0;
 let trial = null, trials = 0;   // испытание: пока отложено, живёт под ?trial
 let boons = [], taken = 0;   // усиления и оружие, падающие прямо в бою
+let barrels = [], blown = 0;   // бочки: бьются от удара и от брошенного тела
 const METER = 20;   // единиц мира в метре: викинг ростом чуть больше метра
 let armX = 0, armY = 1;   // куда смотрит древко у жёсткого оружия   // как быстро едет петля
 let theme = null, bossDone = false;
@@ -397,7 +405,7 @@ function reset() {
     rock = { x: W / 2, y: H * 0.28, vx: 0, vy: 0, r: 19 };
     aim = { x: W / 2, y: H / 2, down: false };
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
-    trial = null; trials = 0; boons = []; taken = 0;
+    trial = null; trials = 0; boons = []; taken = 0; barrels = []; blown = 0;
     srand(Math.floor(Math.random() * 2147483647));
     startWave();
 }
@@ -482,8 +490,8 @@ function step(dt) {
     // шагает следом: одним пальцем и машешь, и ходишь.
     const ax = h.x - hero.x, ay = h.y - hero.y;
     const ad = Math.hypot(ax, ay);
-    if (ad > REACH) {
-        const over = ad - REACH, ux = ax / ad, uy = ay / ad;
+    if (ad > S.reach) {
+        const over = ad - S.reach, ux = ax / ad, uy = ay / ad;
         // Чем дальше уводят руку, тем быстрее герой бежит следом. Жёсткий упор
         // здесь недопустим: он ограничивает руку скоростью шага, и хлыст глохнет.
         const walk = Math.min(over, (HERO_SPEED + over * 4.5) * dt);
@@ -862,6 +870,7 @@ function startWave() {
     bossDone = false;
     // На волне босса тоже приходит толпа — иначе туша остаётся один на один
     // с оружием и волна выходит легче обычной.
+    seedBarrels();
     spawnLeft = bossWave
         ? 1 + Math.round(3 + wave * 0.6)
         : Math.min(30, Math.round((4 + wave * 1.6) * theme[1].size));
@@ -911,9 +920,14 @@ const THEMES = [
 ];
 
 /** Когда вид впервые выходит на арену. */
+/*
+ * Раньше первые две волны состояли из одних ходоков, и умерший на третьей
+ * честно говорил «враг всё ещё один» — он больше никого и не видел.
+ * Теперь новый вид выходит почти каждую волну, и каждому отдаётся дебют.
+ */
 const UNLOCK = {
-    ходок: 1, бегун: 3, ползун: 4, толстяк: 6, колючий: 7,
-    прыгун: 8, щитоносец: 9, верзила: 11, оболочка: 13,
+    ходок: 1, бегун: 2, ползун: 3, толстяк: 4, колючий: 5,
+    прыгун: 6, щитоносец: 7, верзила: 9, оболочка: 11,
 };
 
 function pickTheme(w, avoid) {
@@ -975,6 +989,7 @@ function spawn() {
 }
 
 function moveFoes(dt) {
+    tickBarrels(dt);
     if (trial) { tickTrial(dt); }
     else if (spawnLeft > 0) {
         spawnTimer -= dt;
@@ -1098,49 +1113,49 @@ function moveRock(dt) {
  */
 const WEAPONS = [
     ['Цеп', 'разгоняется сильнее всех и достаёт дальше всех. Второй палец подбирает цепь — этим он и управляется',
-        { len: 10, seg: 10, tipWeight: 0.30, bend: 2, bladeMul: 1.9, headSpeed: 900,
+        { reach: 82, len: 10, seg: 10, tipWeight: 0.30, bend: 2, bladeMul: 1.9, headSpeed: 900,
           sprite: 'flail', haft: '#8b9198', haftDark: '#3b4046',
           bladeW: 13, bladeRGB: [150, 190, 215] }],
     ['Секира', 'разгон средний, зато сносит с одного удара и таскает тебя за собой',
-        { len: 6, seg: 12, tipWeight: 0.60, bend: 7, bladeMul: 3.4, headSpeed: 780,
+        { reach: 62, len: 6, seg: 12, tipWeight: 0.60, bend: 7, bladeMul: 3.4, headSpeed: 780,
           sprite: 'axe', haft: '#8a6238', haftDark: '#4a341d',
           bladeW: 20, bladeRGB: [205, 170, 115] }],
     ['Меч', 'жёсткий клинок на руке: рубит поперёк. Ничего не болтается, зато и разгона нет',
-        { len: 4, seg: 12, rigid: true, thrust: false, bladeMul: 4.2, headSpeed: 1150,
+        { reach: 34, len: 4, seg: 12, rigid: true, thrust: false, bladeMul: 4.2, headSpeed: 1150,
           tipWeight: 0.1, bend: 9,
           sprite: 'sword', haft: '#8a6238', haftDark: '#4a341d',
           bladeW: 13, bladeRGB: [190, 200, 212] }],
     ['Копьё', 'жёсткое древко: бьёт только уколом от себя. Достаёт дальше всех, но вбок им не помашешь',
-        { len: 7, seg: 13, rigid: true, thrust: true, bladeMul: 4.8, headSpeed: 1000,
+        { reach: 52, len: 7, seg: 13, rigid: true, thrust: true, bladeMul: 4.8, headSpeed: 1000,
           tipWeight: 0.1, bend: 9,
           sprite: 'spear', haft: '#7a5a34', haftDark: '#43301a',
           bladeW: 12, bladeRGB: [200, 205, 214] }],
     ['Алебарда', 'жёсткая и длинная: рубит широко, но рука тяжёлая',
-        { len: 8, seg: 13, rigid: true, thrust: false, bladeMul: 4.6, headSpeed: 860,
+        { reach: 58, len: 8, seg: 13, rigid: true, thrust: false, bladeMul: 4.6, headSpeed: 860,
           tipWeight: 0.1, bend: 9, sprite: 'halberd',
           haft: '#7a5a34', haftDark: '#43301a', bladeW: 20, bladeRGB: [196, 204, 214] }],
     ['Дубина', 'короткая и тупая: медленная рука, зато каждый удар валит',
-        { len: 4, seg: 13, rigid: true, thrust: false, bladeMul: 5.4, headSpeed: 760,
+        { reach: 38, len: 4, seg: 13, rigid: true, thrust: false, bladeMul: 5.4, headSpeed: 760,
           tipWeight: 0.1, bend: 9, sprite: 'club',
           haft: '#6b4a28', haftDark: '#3a2716', bladeW: 22, bladeRGB: [198, 168, 118] }],
     ['Клевец', 'жёсткий клюв: колет узко и глубоко, рука самая быстрая',
-        { len: 5, seg: 12, rigid: true, thrust: true, bladeMul: 5.0, headSpeed: 1100,
+        { reach: 34, len: 5, seg: 12, rigid: true, thrust: true, bladeMul: 5.0, headSpeed: 1100,
           tipWeight: 0.1, bend: 9, sprite: 'pick',
           haft: '#6b4a28', haftDark: '#3a2716', bladeW: 14, bladeRGB: [186, 196, 208] }],
     ['Кистень', 'гибкий и тяжёлый: разгоняется медленнее цепа, но таскает тебя сильнее',
-        { len: 8, seg: 11, rigid: false, tipWeight: 0.45, bend: 3, bladeMul: 2.6, headSpeed: 880,
+        { reach: 76, len: 8, seg: 11, rigid: false, tipWeight: 0.45, bend: 3, bladeMul: 2.6, headSpeed: 880,
           sprite: 'mace', haft: '#8b9198', haftDark: '#3b4046',
           bladeW: 16, bladeRGB: [176, 186, 198] }],
     ['Серп', 'гибкий и широкий: цепляет сразу нескольких, но бьёт слабее',
-        { len: 9, seg: 11, rigid: false, tipWeight: 0.28, bend: 2, bladeMul: 2.3, headSpeed: 950,
+        { reach: 78, len: 9, seg: 11, rigid: false, tipWeight: 0.28, bend: 2, bladeMul: 2.3, headSpeed: 950,
           sprite: 'sickle', haft: '#8b9198', haftDark: '#3b4046',
           bladeW: 18, bladeRGB: [206, 212, 220] }],
     ['Гарпун', 'самая длинная цепь: достаёт через полэкрана и слушается хуже всего',
-        { len: 11, seg: 11, rigid: false, tipWeight: 0.25, bend: 2, bladeMul: 2.1, headSpeed: 900,
+        { reach: 90, len: 11, seg: 11, rigid: false, tipWeight: 0.25, bend: 2, bladeMul: 2.1, headSpeed: 900,
           sprite: 'hook', haft: '#8b9198', haftDark: '#3b4046',
           bladeW: 14, bladeRGB: [190, 200, 212] }],
     ['Молот', 'гибкий, но короткий и очень тяжёлый: разгона мало, удар страшный',
-        { len: 6, seg: 12, rigid: false, tipWeight: 0.55, bend: 5, bladeMul: 3.8, headSpeed: 800,
+        { reach: 70, len: 6, seg: 12, rigid: false, tipWeight: 0.55, bend: 5, bladeMul: 3.8, headSpeed: 800,
           sprite: 'hammer', haft: '#8b9198', haftDark: '#3b4046',
           bladeW: 20, bladeRGB: [186, 192, 200] }],
 ];
@@ -1223,6 +1238,61 @@ function blip(f, dur, type, vol, to) {
 }
 
 const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* не везде есть */ } };
+
+/* ─────────────────────────── Бочки ────────────────────────────────────── */
+
+/**
+ * Бочку можно разбить замахом или швырнуть в неё врага. Взрыв бьёт всех
+ * вокруг, включая героя, — поэтому стоять рядом невыгодно, и арена
+ * перестаёт быть пустой комнатой.
+ */
+function seedBarrels() {
+    barrels = [];
+    for (let i = 0; i < 3 + Math.floor(wave / 3); i++) {
+        barrels.push({ x: rnd(60, W - 60), y: rnd(90, H - 90), r: 17, dead: false });
+    }
+}
+
+function blowBarrel(b) {
+    b.dead = true;
+    blown++;
+    shake = 1;
+    slow = Math.max(slow, 0.1);
+    blip(90, 0.45, 'sawtooth', 0.28, 40);
+    buzz(70);
+    for (let k = 0; k < 14; k++) {
+        const a = rnd(0, 6.283), sp = rnd(180, 520);
+        bits.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+            r: rnd(2.5, 5), ang: a, spin: rnd(-16, 16), t: rnd(0.5, 1), boss: true });
+    }
+    for (const e of foes) {
+        const d = Math.hypot(e.x - b.x, e.y - b.y);
+        if (d > 95 || e.dead) continue;
+        const f = 1 - d / 95;
+        hurt(e, 40 * f, (e.x - b.x) / (d || 1) * 900 * f, (e.y - b.y) / (d || 1) * 900 * f);
+    }
+    if (Math.hypot(hero.x - b.x, hero.y - b.y) < 70 && hero.iframe <= 0 && !dead) {
+        hero.iframe = 0.9; hero.hp -= 1;      // рядом с бочкой стоять нельзя
+        if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
+    }
+}
+
+function tickBarrels(dt) {
+    for (const b of barrels) {
+        if (b.dead) continue;
+        for (let i = 1; i < pts.length; i++) {
+            const p = pts[i];
+            if (!swept(p, { x: b.x, y: b.y, r: b.r }, radiusAt(i))) continue;
+            const [vx, vy] = vel(p);
+            if (Math.hypot(vx, vy) > 420) { blowBarrel(b); break; }
+        }
+        if (b.dead) continue;
+        for (const e of foes) {           // и брошенным телом тоже
+            if (e.flying <= 0 || e.dead) continue;
+            if (Math.hypot(e.x - b.x, e.y - b.y) < b.r + e.r) { blowBarrel(b); break; }
+        }
+    }
+}
 
 /* ─────────────────────────── Награда на бегу ──────────────────────────── */
 
@@ -1543,6 +1613,11 @@ function draw() {
         const t = pts[pts.length - 1];
         ctx.strokeStyle = 'rgba(120,255,190,.55)'; ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.moveTo(t.x, t.y); ctx.lineTo(hooked.x, hooked.y); ctx.stroke();
+    }
+
+    for (const b of barrels) {
+        const im = SPR[b.dead ? 'obstacle-barrel-broken' : 'obstacle-barrel'];
+        if (ready(im)) drawPart(im, b.x, b.y, (b.r * 2.4) / im.naturalWidth, 0);
     }
 
     for (const b of boons) {
@@ -1913,7 +1988,7 @@ if (location.search.includes('flow')) {
             hero.hp = hero.hpMax;             // бессмертие: проверяем прохождение, не бой
             step(1 / 120);
         }
-        log.push('подобрано наград ' + taken +
+        log.push('подобрано наград ' + taken + ', бочек взорвано ' + blown +
             ', ' + (wave >= 6 ? 'пять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
             ' за ' + Math.round(k / 120) + ' с, счёт ' + score + ', убито ' + kills +
             ', осталось врагов ' + foes.length + ', в очереди ' + spawnLeft);
