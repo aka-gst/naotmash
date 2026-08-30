@@ -19,6 +19,11 @@ HERE="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$HERE/index.html"
 [ -f "$SRC" ] || { echo "ОШИБКА: нет index.html" >&2; exit 1; }
 
+# Белый список, а не чёрный: чёрный пропустит всё, что появится позже.
+# Игра по-прежнему открывается и играется одним файлом — звук подгружается
+# лениво, уже во время игры, и его отсутствие ничего не ломает.
+SHIP="index.html sfx" 
+
 # Файл обязан быть самодостаточным: он не должен ничего подгружать. Проверяем
 # именно загрузку — скрипты, картинки, стили. Обычная ссылка <a href="/"> это
 # переход, а не загрузка: кнопка «на главную» ничего не ломает.
@@ -30,14 +35,21 @@ if grep -E 'src="(https?:)?//|src="/' "$SRC" | grep -qv '/pulse/script.js' \
   exit 1
 fi
 
-echo "уедет в $SITE_ROOT/$GAME_PATH/index.html: $(wc -c < "$SRC" | tr -d ' ') байт"
+for entry in $SHIP; do
+  [ -e "$HERE/$entry" ] || { echo "ОШИБКА: нет $entry" >&2; exit 1; }
+done
+echo "уедет в $SITE_ROOT/$GAME_PATH: $SHIP"
+echo "  index.html $(wc -c < "$SRC" | tr -d ' ') байт, звуков $(ls "$HERE/sfx"/*.wav 2>/dev/null | wc -l | tr -d ' ')"
 [ "$DEPLOY" = yes ] || { echo; echo "это была проверка. для выкладки: sh tools/deploy.sh --deploy"; exit 0; }
 
 # Сервер иногда отвечает на SSH дольше 15 секунд, и выкладка срывалась на
 # полпути. Ждём дольше и не считаем неудачный mkdir поводом всё бросить.
 REMOTE_SHELL="ssh -o BatchMode=yes -o ConnectTimeout=45 -o ServerAliveInterval=10"
 $REMOTE_SHELL "$SSH_HOST" "mkdir -p $SITE_ROOT/$GAME_PATH" || true
-rsync -az -e "$REMOTE_SHELL" "$SRC" "$SSH_HOST:$SITE_ROOT/$GAME_PATH/index.html"
+for entry in $SHIP; do
+  rsync -az --delete -e "$REMOTE_SHELL" "$HERE/$entry" "$SSH_HOST:$SITE_ROOT/$GAME_PATH/" || {
+    echo "ОШИБКА: не уехало: $entry" >&2; exit 1; }
+done
 
 code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "https://aka-gst.ru/$GAME_PATH/" || echo "нет ответа")
 echo "  /$GAME_PATH/  $code"
