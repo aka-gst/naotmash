@@ -375,6 +375,7 @@ let score = 0, kills = 0, record = 0;
 let hooked = null, thrown = 0, grabs = 0;
 let gripped = null, gripT = 0;   // щитоносец, вцепившийся в оружие
 let cntOver = 0, cntGrip = 0, cntBoom = 0;   // сколько раз сработали повадки
+let inCorner = 0, bodySamples = 0;   // сколько времени тела проводят по углам
 let trial = null, trials = 0;   // испытание: пока отложено, живёт под ?trial
 let boons = [], taken = 0;   // усиления и оружие, падающие прямо в бою
 let barrels = [], blown = 0;   // бочки: бьются от удара и от брошенного тела
@@ -413,7 +414,7 @@ function reset() {
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
     trial = null; trials = 0; boons = []; taken = 0; barrels = []; blown = 0;
     gripped = null; hooked = null;
-    cntOver = 0; cntGrip = 0; cntBoom = 0;
+    cntOver = 0; cntGrip = 0; cntBoom = 0; inCorner = 0; bodySamples = 0;
     srand(Math.floor(Math.random() * 2147483647));
     startWave();
 }
@@ -1171,6 +1172,11 @@ function moveFoes(dt) {
         }
         e.smack -= dt;
         e.x = e.p[1].x; e.y = e.p[1].y;
+        // Гипотеза из референса: у прямоугольной арены углы это ловушки.
+        // Меряем, сколько времени тела действительно там проводят.
+        bodySamples++;
+        const cx = Math.min(e.x, W - e.x), cy = Math.min(e.y, H - e.y);
+        if (cx < 80 && cy < 80) inCorner++;
         e.flash = Math.max(0, e.flash - dt * 5);
         e.squeeze = Math.max(0, e.squeeze - dt * 4);
         e.touch -= dt;
@@ -2347,7 +2353,8 @@ if (location.search.includes('flow')) {
         }
         // Снимаем показания до «ещё раз»: она обнуляет забег.
         const snap = { дошёл: wave >= 10, секунд: Math.round(k / 120), счёт: score, убито: kills,
-            поверху: cntOver, схват: cntGrip, взрыв: cntBoom, награды: taken, бочки: blown };
+            поверху: cntOver, схват: cntGrip, взрыв: cntBoom, награды: taken, бочки: blown,
+            углы: bodySamples ? Math.round(inCorner / bodySamples * 100) : 0 };
         hero.hp = 0;
         showResult();
         const okOver = $('over').classList.contains('on') && !!$('over').querySelector('button');
@@ -2365,11 +2372,13 @@ if (location.search.includes('flow')) {
         const pad = (x, n) => String(x).padEnd(n);
         let out = 'ПРОХОЖДЕНИЕ, прогонов ' + runs + '\n' +
             pad('оружие', 11) + pad('дошёл', 7) + pad('сек', 5) + pad('счёт', 7) +
-            pad('убито', 7) + pad('поверху', 9) + pad('схват', 7) + pad('взрыв', 7) + 'итог+ещёраз\n';
+            pad('убито', 7) + pad('поверху', 9) + pad('схват', 7) + pad('взрыв', 7) +
+            pad('в углах', 7) + 'итог+ещёраз\n';
         for (const r of all) {
             out += pad(r.оружие, 11) + pad(r.дошёл ? 'да' : 'НЕТ', 7) + pad(r.секунд, 5) +
                 pad(r.счёт, 7) + pad(r.убито, 7) + pad(r.поверху, 9) + pad(r.схват, 7) +
-                pad(r.взрыв, 7) + ((r.окно && r.начало && r.итог && r.ещёраз) ? 'ок' : 'СЛОМАНО') + '\n';
+                pad(r.взрыв, 7) + pad(r.углы + '%', 7) +
+                ((r.окно && r.начало && r.итог && r.ещёраз) ? 'ок' : 'СЛОМАНО') + '\n';
         }
         const fired = (key) => all.filter((r) => r[key] > 0).length;
         out += '\nсработало прогонов из ' + runs + ': поверху ' + fired('поверху') +
