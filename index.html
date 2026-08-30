@@ -79,7 +79,18 @@
   .modal span { font-size: 12.5px; color: #93a5b8; line-height: 1.4; }
 
   #start h1 { margin: 0 0 2px; font-size: 24px; font-weight: 600; letter-spacing: .02em; }
-  #start ul { margin: 0 0 14px; padding: 0 0 0 18px; max-width: 340px; color: #9fb0c2; font-size: 13.5px; line-height: 1.7; }
+  #start .lead { margin: 0 0 12px; max-width: 340px; font-size: 15px; line-height: 1.5; color: #dfe9f4; }
+  #start .lead span { display: inline-block; margin-top: 3px; font-size: 13px; color: #93a5b8; }
+  /* Карточка оружия — это кнопка «начать», и выглядеть она обязана кнопкой:
+     иначе человек стоит на пороге и ищет, где тут старт. */
+  #start .pick { position: relative; background: #1e2b3a; border-color: #46617e;
+                 box-shadow: 0 1px 0 #0b1119, inset 0 1px 0 #ffffff0f; }
+  #start .pick .arw { margin-left: auto; padding-left: 6px; font-size: 20px; line-height: 1; color: #7fd8a4; }
+  #start .pick:hover, #start .pick:focus-visible { background: #26374a; border-color: #7fd8a4; }
+  #start .pick:active { background: #2f6b4a; border-color: #3d8a60; }
+  #start details { margin: 14px 0 0; max-width: 340px; }
+  #start summary { cursor: pointer; color: #7fa3c4; font-size: 13.5px; padding: 6px 0; }
+  #start ul { margin: 4px 0 14px; padding: 0 0 0 18px; max-width: 340px; color: #9fb0c2; font-size: 13.5px; line-height: 1.7; }
   #start ul b { font-size: inherit; }
   #start .rec, #over .rec { margin: 0 0 10px; color: #cfae55; font-size: 13.5px; }
   #over ul { margin: 2px 0 14px; padding: 0 0 0 18px; max-width: 340px; color: #9fb0c2; font-size: 14px; line-height: 1.8; }
@@ -1327,14 +1338,14 @@ const WEAPONS = [
           bladeW: 20, bladeRGB: [186, 192, 200] }],
 ];
 
-const RULES = '<ul>' +
+const RULES = '<details><summary>как это работает</summary><ul>' +
     '<li><b>Урон — от скорости</b>, а не от касания: медленно подвёл — ноль.</li>' +
     '<li>Уведёшь руку дальше плеча — викинг пойдёт следом.</li>' +
     '<li><b>Второй палец</b> (на компе — <b>Shift</b>) подбирает оружие: оно подтягивается к руке и твердеет. Так наводят удар.</li>' +
     '<li>Светящиеся куски врагов можно подобрать: это временное оружие.</li>' +
     '<li><b>Медленное касание не бьёт, а цепляет.</b> Зацепил — разгонись и отпусти: враг улетит в остальных.</li>' +
     '<li>Ползуна достаёт только кончик, щитоносец ловит оружие — вырывайся рывком, колючий взрывается от смерти.</li>' +
-    '</ul>';
+    '</ul></details>';
 
 function showResult() {
     started = false;
@@ -1356,11 +1367,18 @@ function showResult() {
 function showStart() {
     started = false;
     const el = $('start');
-    el.innerHTML = '<h1>Наотмашь</h1>' + RULES +
+    // Первым идёт действие, а не справка: человек должен понять, что жать,
+    // прежде чем поймёт правила. Механику первый же замах объясняет лучше
+    // любого списка, поэтому список ушёл под спойлер вниз.
+    el.innerHTML = '<h1>Наотмашь</h1>' +
+        '<p class="lead">Выбери железяку — и сразу в бой.<br>' +
+        '<span>Кнопки удара нет: бьёт скорость, а не касание.</span></p>' +
         (record ? '<p class="rec">рекорд ' + record + '</p>' : '') +
-        WEAPONS.map((w, i) => '<button data-w="' + i + '" aria-label="' + w[0] + '">' +
+        WEAPONS.map((w, i) => '<button class="pick" data-w="' + i + '" aria-label="' + w[0] + '">' +
             '<span class="ic">' + (ICON[w[2].sprite] || '') + '</span>' +
-            '<span class="tx"><b>' + w[0] + '</b><span>' + w[1] + '</span></span></button>').join('');
+            '<span class="tx"><b>' + w[0] + '</b><span>' + w[1] + '</span></span>' +
+            '<span class="arw">›</span></button>').join('') +
+        RULES;
     el.classList.add('on');
 }
 
@@ -1409,9 +1427,18 @@ function play(key, vol, rate) {
     return true;
 }
 
+/**
+ * Общий уговор всех наших игр: `?тихо` (можно `?quiet`) не заводит звук
+ * вовсе. Именно «не заводит», а не «приглушает»: приглушённый контекст
+ * оживает сам при переразмере окна и при возврате во вкладку, и обход снова
+ * слышно на колонках. Съёмочные и проверочные режимы молчат сами.
+ */
+const QUIET = /тихо|quiet|loop=|петля=|кадр|flow=|test=/
+    .test(decodeURIComponent(location.search));
+
 /** Контекст можно завести только из настоящего касания. */
 function audioOn() {
-    if (ac || !S.sound) return;
+    if (QUIET || ac || !S.sound) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ac = new AC();
@@ -2450,7 +2477,11 @@ if (location.search.includes('flow')) {
 // физика идёт настоящая — сцену ставит игра, а не запись.
 //   ?петля=1 — веер брызг в толпе,   ?петля=2 — дуга и попадание,
 //   ?петля=3 — отрыв головы во весь экран.
-const loopN = parseInt((location.search.match(/(?:петля|loop)=(\d+)/) ||
+// Неподвижный кадр для карточки на витрине: сцена ставится, отрыв
+// случается, и всё замирает в один и тот же миг. Снимающему не нужно ловить
+// момент — кадр повторяется байт в байт.
+const stillFrame = /кадр|still/.test(decodeURIComponent(location.search));
+const loopN = stillFrame ? 3 : parseInt((location.search.match(/(?:петля|loop)=(\d+)/) ||
     location.search.match(/(?:%D0%BF%D0%B5%D1%82%D0%BB%D1%8F)=(\d+)/) || [])[1], 10);
 if (loopN >= 1 && loopN <= 3) {
     const N = window.naotmash;
@@ -2469,9 +2500,13 @@ if (loopN >= 1 && loopN <= 3) {
         if (t > (loopN === 3 ? 2.6 : 2.2)) { t = setup(); tore = false; }
         setTimeout(() => frame(performance.now()), 16);
     };
-    // Таймер, а не requestAnimationFrame: витрину надо уметь проверить и в
-    // спящей вкладке, где кадры не запрашиваются вовсе.
-    setTimeout(() => frame(performance.now()), 16);
+    if (stillFrame) {
+        N.step(0.55); N.tear(); N.step(0.42); N.render();   // и больше ничего
+    } else {
+        // Таймер, а не requestAnimationFrame: витрину надо уметь проверить и
+        // в спящей вкладке, где кадры не запрашиваются вовсе.
+        setTimeout(() => frame(performance.now()), 16);
+    }
 }
 
 if (location.search.includes('curve')) {
