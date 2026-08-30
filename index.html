@@ -998,8 +998,13 @@ function moveFoes(dt) {
         e.squeeze = Math.max(0, e.squeeze - dt * 4);
         e.touch -= dt;
         if (d < e.r + HERO_R && e.touch <= 0 && hero.iframe <= 0 && !dead) {
+            // Оружие висит на вытянутой руке и метёт дугу снаружи, поэтому
+            // прижавшегося вплотную нечем достать. Значит, столкновение с
+            // героем должно отбрасывать врага на длину оружия, а не на шаг:
+            // иначе он приклеивается и волна не кончается никогда.
             e.touch = 1; hero.iframe = 0.9;
-            for (const q of e.p) push(q, -dx / d * 500, -dy / d * 500);
+            e.down = Math.max(e.down, 0.5);
+            for (const q of e.p) push(q, -dx / d * 1400, -dy / d * 1400);
             hero.hp -= 1; shake = 1;
             blip(95, 0.28, 'sawtooth', 0.2, 45); buzz(80);
             if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
@@ -1718,6 +1723,60 @@ requestAnimationFrame(loop);
  * анимации, и печатает итог в консоль. Нужна потому, что проверять сборку
  * приходится на чужом телефоне, а ошибка боя проявляется только в бою.
  */
+/*
+ * Проверка прохождения: worm.html?flow прогоняет партию целиком — стартовое
+ * окно, выбор оружия, пять волн, смерть, экран итога, «ещё раз». Нужна
+ * потому, что экран итога и возврат к выбору иначе никогда не выполняются
+ * при проверке: до смерти в отладке не доживают.
+ */
+if (location.search.includes('flow')) {
+    const log = [];
+    try {
+        W = 450; H = 900; sc = 1;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        showStart();
+        log.push('стартовое окно: ' + ($('start').classList.contains('on') ? 'да' : 'НЕТ'));
+
+        $('start').querySelector('button[data-w="0"]').click();
+        log.push('оружие выбрано, бой начат: ' + (started && !menu ? 'да' : 'НЕТ') + ', волна ' + wave);
+
+        aim.down = true;
+        let k = 0;
+        while (wave < 6 && k < 120 * 600) {
+            const t = k++ / 120;
+            aim.x = W / 2 + Math.cos(t * 7) * 120;
+            aim.y = H / 2 + Math.sin(t * 7) * 120;
+            if (paused) startWave();          // карточки прокачки пропускаем
+            hero.hp = hero.hpMax;             // бессмертие: проверяем прохождение, не бой
+            step(1 / 120);
+        }
+        log.push((wave >= 6 ? 'пять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
+            ' за ' + Math.round(k / 120) + ' с, счёт ' + score + ', убито ' + kills +
+            ', осталось врагов ' + foes.length + ', в очереди ' + spawnLeft);
+        for (const e of foes) {
+            log.push('  живой: ' + e.kind + ' hp ' + Math.round(e.hp) + '/' + e.hp0 +
+                ', лежит ' + e.down.toFixed(1) + ', летит ' + e.flying.toFixed(1) +
+                ', до героя ' + Math.round(Math.hypot(e.x - hero.x, e.y - hero.y)));
+        }
+
+        hero.hp = 0;
+        showResult();
+        const shown = $('over').classList.contains('on');
+        log.push('экран итога: ' + (shown ? 'показан' : 'НЕТ') +
+            ', рекорд ' + record + ', кнопка ' + ($('over').querySelector('button') ? 'есть' : 'НЕТ'));
+
+        $('over').querySelector('button').click();
+        log.push('«ещё раз»: итог ' + ($('over').classList.contains('on') ? 'ВИСИТ' : 'убран') +
+            ', стартовое ' + ($('start').classList.contains('on') ? 'показано' : 'НЕТ') +
+            ', волна ' + wave + ', счёт ' + score);
+
+        console.log('ПРОХОЖДЕНИЕ: ' + log.join(' | '));
+    } catch (err) {
+        console.error('ПРОХОЖДЕНИЕ УПАЛО на шаге ' + (log.length + 1) + ': ' + err.message +
+            ' | пройдено: ' + log.join(' | '));
+    }
+}
+
 /* Разбор кривой: worm.html?curve печатает состав и вес каждой волны. */
 if (location.search.includes('curve')) {
     srand(12345);
