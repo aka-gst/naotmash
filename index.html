@@ -647,6 +647,13 @@ function combat(dt) {
                 const perp = Math.abs(vx * -armY + vy * armX);
                 sp = S.thrust ? along * 1.6 + perp * 0.3 : perp + along * 0.3;
             }
+            // Ползун стелется: древко проходит над ним при любой скорости,
+            // поэтому правило стоит до порога урона, а не после.
+            if (e.kind === 'ползун' && i < pts.length - BLADE) {
+                e.iframe = 0.1;
+                nums.push({ x: e.x, y: e.y - 10, v: 'поверху', t: 0.4 }); cntOver++;
+                continue;
+            }
             const floor = S.rigid ? 150 : HIT_SPEED;
             if (sp < floor) {
                 // Щитоносец делает обратное нашему захвату: он ловит оружие
@@ -662,16 +669,11 @@ function combat(dt) {
             // достаёт только боевая часть. Значит, по нему надо целиться.
             // Щитоносец ловит оружие, если оно летит недостаточно быстро:
             // либо бей его от души, либо будешь вырываться.
-            if (e.kind === 'щитоносец' && sp < 900 && !gripped) {
+            if (e.kind === 'щитоносец' && sp < 1250 && !gripped) {
                 gripped = e; gripT = 0; cntGrip++;
                 e.held = true; e.iframe = 0.3;
                 play('натяг', 0.45, 0.8);
                 nums.push({ x: e.x, y: e.y - 12, v: 'схватил!', t: 0.9, big: true });
-                continue;
-            }
-            if (e.kind === 'ползун' && i < pts.length - BLADE) {
-                e.iframe = 0.12;
-                nums.push({ x: e.x, y: e.y - 10, v: 'поверху', t: 0.4 }); cntOver++;
                 continue;
             }
             if (e.chain && hitPart > 0) {           // членистого берёт только голова
@@ -2320,54 +2322,62 @@ let filmT = 0;
  * при проверке: до смерти в отладке не доживают.
  */
 if (location.search.includes('flow')) {
-    const log = [];
-    try {
+    // Один прогон ловит вариант, а не правило: у бота по дороге меняется
+    // оружие, и повадки, которые от него зависят, в одном прогоне могут не
+    // сработать ни разу. Поэтому прогонов несколько и смотрим разброс.
+    const runs = Math.max(1, Math.min(9, parseInt((location.search.match(/flow=(\d+)/) || [])[1], 10) || 3));
+
+    function runOnce(weaponIdx) {
         W = 450; H = 900; sc = 1;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         showStart();
-        log.push('стартовое окно: ' + ($('start').classList.contains('on') ? 'да' : 'НЕТ'));
-
-        $('start').querySelector('button[data-w="0"]').click();
-        log.push('оружие выбрано, бой начат: ' + (started && !menu ? 'да' : 'НЕТ') + ', волна ' + wave);
+        const okStart = $('start').classList.contains('on');
+        $('start').querySelector('button[data-w="' + weaponIdx + '"]').click();
+        const okBegin = started && !menu;
 
         aim.down = true;
         let k = 0;
-        while (wave < 10 && k < 120 * 1500) {   // до девятой: там уже есть все повадки
+        while (wave < 10 && k < 120 * 1500) {
             const t = k++ / 120;
             aim.x = W / 2 + Math.cos(t * 7) * 120;
             aim.y = H / 2 + Math.sin(t * 7) * 120;
-            if (paused) startWave();          // карточки прокачки пропускаем
+            if (paused) startWave();
             hero.hp = hero.hpMax;             // бессмертие: проверяем прохождение, не бой
             step(1 / 120);
         }
-        log.push('поверху ' + cntOver + ', схватов ' + cntGrip + ', взрывов колючих ' + cntBoom +
-            ', подобрано наград ' + taken + ', бочек взорвано ' + blown +
-            ', ' + (wave >= 10 ? 'девять волн пройдены' : 'ЗАСТРЯЛ на волне ' + wave) +
-            ' за ' + Math.round(k / 120) + ' с, счёт ' + score + ', убито ' + kills +
-            ', осталось врагов ' + foes.length + ', в очереди ' + spawnLeft);
-        for (const e of foes) {
-            log.push('  живой: ' + e.kind + ' hp ' + Math.round(e.hp) + '/' + e.hp0 +
-                ', лежит ' + e.down.toFixed(1) + ', летит ' + e.flying.toFixed(1) +
-                ', до героя ' + Math.round(Math.hypot(e.x - hero.x, e.y - hero.y)) +
-                ', касаний ' + (e.probe || 0) + ', макс. скорость ' + (e.probeSp || 0) +
-                ' при броне ' + (e.probeArm || 0) + ', оружие ' + (S.rigid ? 'жёсткое' : 'гибкое'));
-        }
-
+        // Снимаем показания до «ещё раз»: она обнуляет забег.
+        const snap = { дошёл: wave >= 10, секунд: Math.round(k / 120), счёт: score, убито: kills,
+            поверху: cntOver, схват: cntGrip, взрыв: cntBoom, награды: taken, бочки: blown };
         hero.hp = 0;
         showResult();
-        const shown = $('over').classList.contains('on');
-        log.push('экран итога: ' + (shown ? 'показан' : 'НЕТ') +
-            ', рекорд ' + record + ', кнопка ' + ($('over').querySelector('button') ? 'есть' : 'НЕТ'));
-
+        const okOver = $('over').classList.contains('on') && !!$('over').querySelector('button');
         $('over').querySelector('button').click();
-        log.push('«ещё раз»: итог ' + ($('over').classList.contains('on') ? 'ВИСИТ' : 'убран') +
-            ', стартовое ' + ($('start').classList.contains('on') ? 'показано' : 'НЕТ') +
-            ', волна ' + wave + ', счёт ' + score);
+        const okAgain = !$('over').classList.contains('on') && $('start').classList.contains('on') && wave === 1;
 
-        console.log('ПРОХОЖДЕНИЕ: ' + log.join(' | '));
+        return { окно: okStart, начало: okBegin, итог: okOver, ещёраз: okAgain,
+            оружие: WEAPONS[weaponIdx][0], ...snap };
+    }
+
+    try {
+        const all = [];
+        for (let i = 0; i < runs; i++) all.push(runOnce(i % WEAPONS.length));
+
+        const pad = (x, n) => String(x).padEnd(n);
+        let out = 'ПРОХОЖДЕНИЕ, прогонов ' + runs + '\n' +
+            pad('оружие', 11) + pad('дошёл', 7) + pad('сек', 5) + pad('счёт', 7) +
+            pad('убито', 7) + pad('поверху', 9) + pad('схват', 7) + pad('взрыв', 7) + 'итог+ещёраз\n';
+        for (const r of all) {
+            out += pad(r.оружие, 11) + pad(r.дошёл ? 'да' : 'НЕТ', 7) + pad(r.секунд, 5) +
+                pad(r.счёт, 7) + pad(r.убито, 7) + pad(r.поверху, 9) + pad(r.схват, 7) +
+                pad(r.взрыв, 7) + ((r.окно && r.начало && r.итог && r.ещёраз) ? 'ок' : 'СЛОМАНО') + '\n';
+        }
+        const fired = (key) => all.filter((r) => r[key] > 0).length;
+        out += '\nсработало прогонов из ' + runs + ': поверху ' + fired('поверху') +
+            ', схват ' + fired('схват') + ', взрыв ' + fired('взрыв') +
+            '  |  партия дошла до конца в ' + all.filter((r) => r.дошёл).length;
+        console.log(out);
     } catch (err) {
-        console.error('ПРОХОЖДЕНИЕ УПАЛО на шаге ' + (log.length + 1) + ': ' + err.message +
-            ' | пройдено: ' + log.join(' | '));
+        console.error('ПРОХОЖДЕНИЕ УПАЛО: ' + err.message + ' | ' + (err.stack || '').split('\n')[1]);
     }
 }
 
