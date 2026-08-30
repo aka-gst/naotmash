@@ -1116,7 +1116,9 @@ function moveFoes(dt) {
             spawnTimer = Math.max(0.2, 0.9 - wave * 0.05);
             spawn(); spawnLeft--;
         }
-    } else if (foes.length <= 2 && !paused && !trial) {
+    } else if (foes.length <= 2 && !paused && !trial && !filming) {
+        // При съёмке волны не идут: сцену ставит снимающий, и подсыпать в неё
+        // врагов нельзя — иначе «дуга без врагов» не останется без врагов.
         // Волна не «зачищается»: следующая начинается, пока предыдущая ещё
         // догорает. В референсе давление не спадает ни на секунду, а у нас
         // между волнами был провал — именно он и читался как «не нарастает».
@@ -2293,7 +2295,8 @@ window.naotmash = {
         const tip = pts[pts.length - 1];
         const [vx, vy] = vel(tip);
         const d = Math.hypot(vx, vy) || 1;
-        for (let i = 0; i < (o.crowd || 3); i++) {
+        const crowd = o.crowd === undefined ? 3 : o.crowd;   // ноль это ноль, а не «не задано»
+        for (let i = 0; i < crowd; i++) {
             spawnAt(o.kind || 'ходок',
                 tip.x + vx / d * (34 + i * 26) + (i % 2 ? 22 : -22),
                 tip.y + vy / d * (34 + i * 26));
