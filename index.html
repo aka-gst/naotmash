@@ -602,6 +602,20 @@ function bounce(p, r) {
 }
 
 const vel = (p) => [(p.x - p.px) / DT, (p.y - p.py) / DT];
+
+/**
+ * Скорость, по которой считается урон. У жёсткого оружия «своё» направление
+ * идёт полностью, чужое со скидкой. Единственный источник правды: по этой же
+ * величине светится лента замаха, поэтому она не врёт про то, пробьёшь ты
+ * или нет.
+ */
+function effSpeed(vx, vy) {
+    if (!S.rigid) return Math.hypot(vx, vy);
+    const along = Math.abs(vx * armX + vy * armY);
+    const perp = Math.abs(vx * -armY + vy * armX);
+    return S.thrust ? along * 1.6 + perp * 0.3 : perp + along * 0.3;
+}
+const hitFloor = () => (S.rigid ? 150 : HIT_SPEED);
 const radiusAt = (i) => (i >= pts.length - BLADE ? 9 : 6);
 
 /**
@@ -638,16 +652,7 @@ function combat(dt) {
             const [vx, vy] = vel(p);
             // У копья считается движение вдоль древка, у клинка — поперёк.
             // Поэтому колоть и рубить это разные действия, а не одно.
-            // «Своё» направление считается полностью, чужое — с большой
-            // скидкой. Запрещать вбок нельзя: выпад ограничен длиной руки
-            // и в чистом виде не дотягивает до порога урона.
-            let sp;
-            if (!S.rigid) sp = Math.hypot(vx, vy);
-            else {
-                const along = Math.abs(vx * armX + vy * armY);
-                const perp = Math.abs(vx * -armY + vy * armX);
-                sp = S.thrust ? along * 1.6 + perp * 0.3 : perp + along * 0.3;
-            }
+            const sp = effSpeed(vx, vy);
             // Ползун стелется: древко проходит над ним при любой скорости,
             // поэтому правило стоит до порога урона, а не после.
             if (e.kind === 'ползун' && i < pts.length - BLADE) {
@@ -655,7 +660,7 @@ function combat(dt) {
                 nums.push({ x: e.x, y: e.y - 10, v: 'поверху', t: 0.4 }); cntOver++;
                 continue;
             }
-            const floor = S.rigid ? 150 : HIT_SPEED;
+            const floor = hitFloor();
             if (sp < floor) {
                 // Щитоносец делает обратное нашему захвату: он ловит оружие
                 // сам. Освободиться можно только рывком — медленно не выйдет.
@@ -1988,7 +1993,8 @@ function draw() {
     // Копии кадров на быстром замахе разъезжались в частокол; лента не рвётся.
     const tipNow = pts[pts.length - 1];
     const [tvx0, tvy0] = vel(tipNow);
-    const hot = Math.min(1, Math.max(0, (Math.hypot(tvx0, tvy0) - HIT_SPEED) / 900));
+    // Лента — это прибор: она загорается ровно тогда, когда замах уже бьёт.
+    const hot = Math.min(1, Math.max(0, (effSpeed(tvx0, tvy0) - hitFloor()) / 900));
     if (trail.length > 2 && hot > 0.02) {
         ctx.beginPath();
         ctx.moveTo(trail[0][0], trail[0][1]);
