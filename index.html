@@ -337,7 +337,7 @@ let started = false, menu = false;
 let score = 0, kills = 0, record = 0;
 let hooked = null, thrown = 0, grabs = 0;
 let gripped = null, gripT = 0;   // щитоносец, вцепившийся в оружие
-let cntOver = 0, cntGrip = 0, cntBoom = 0, cntEpic = 0;   // сколько раз сработали повадки
+let cntOver = 0, cntGrip = 0, cntBoom = 0, cntEpic = 0, cntFade = 0, cntIn = 0;   // сколько раз сработали повадки
 let inCorner = 0, bodySamples = 0;   // сколько времени тела проводят по углам
 let trial = null, trials = 0;   // испытание: пока отложено, живёт под ?trial
 let boons = [], taken = 0;   // усиления и оружие, падающие прямо в бою
@@ -345,6 +345,8 @@ let barrels = [], blown = 0;   // бочки: бьются от удара и о
 const METER = 20;   // единиц мира в метре: викинг ростом чуть больше метра
 let armX = 0, armY = 1;   // куда смотрит древко у жёсткого оружия   // как быстро едет петля
 let theme = null, bossDone = false;
+let marks = [];                     // где сейчас заходят враги
+let biomeShown = -1, biomeWas = -1, biomeFade = 1;   // задник меняется переходом
 let segNow = 11;   // рабочая длина звена: под напряжением цепь подбирается
 let wave = 0, spawnLeft = 0, paused = false;
 
@@ -377,7 +379,7 @@ function reset() {
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
     trial = null; trials = 0; boons = []; taken = 0; barrels = []; blown = 0;
     gripped = null; hooked = null;
-    cntOver = 0; cntGrip = 0; cntBoom = 0; cntEpic = 0; inCorner = 0; bodySamples = 0;
+    cntOver = 0; cntGrip = 0; cntBoom = 0; cntEpic = 0; cntFade = 0; cntIn = 0; inCorner = 0; bodySamples = 0;
     srand(Math.floor(Math.random() * 2147483647));
     startWave();
 }
@@ -782,6 +784,18 @@ function combat(dt) {
     for (const n of nums) { n.t -= dt; n.y -= 26 * dt; }
     nums = nums.filter((n) => n.t > 0);
     if (shake > 0) shake = Math.max(0, shake - dt * 6);
+    // Смена арены — состояние, а не рисование: держать её в drawGround
+    // значит поставить ход игры в зависимость от того, рисуем ли мы сейчас.
+    // Проверить такое без экрана нельзя, и первая же проба это показала.
+    const bi = biomeIdx();
+    if (bi !== biomeShown) {
+        biomeWas = biomeShown < 0 ? bi : biomeShown;
+        biomeShown = bi;
+        biomeFade = biomeWas === bi ? 1 : 0;
+    }
+    if (biomeFade < 1) { biomeFade = Math.min(1, biomeFade + dt / 1.5); cntFade++; }
+    for (const m of marks) m.t -= dt;
+    marks = marks.filter((m) => m.t > 0);
 }
 
 function hurt(e, dmg, kx, ky, part) {
@@ -1079,9 +1093,20 @@ function spawnAt(kind, x, y) {
 }
 
 function spawn() {
+    // Враг заводится ЗА краем и заходит сам. Раньше он возникал в двадцати
+    // единицах внутри поля — со стороны это читалось телепортацией: «фигак,
+    // и новые монстры». Разница только в знаке координаты, а ощущение другое:
+    // видно, откуда идут, и есть секунда развернуться.
     const edge = Math.floor(rnd(0, 4));
-    const x = edge === 0 ? 20 : edge === 1 ? W - 20 : rnd(20, W - 20);
-    const y = edge === 2 ? 20 : edge === 3 ? H - 20 : rnd(20, H - 20);
+    const out = 42;
+    const x = edge === 0 ? -out : edge === 1 ? W + out : rnd(30, W - 30);
+    const y = edge === 2 ? -out : edge === 3 ? H + out : rnd(30, H - 30);
+    // Метка на кромке: показывает место входа, пока сам он ещё за экраном.
+    marks.push({
+        x: Math.max(10, Math.min(W - 10, x)),
+        y: Math.max(10, Math.min(H - 10, y)), t: 1.1,
+    });
+    cntIn++;
     const boss = wave % 5 === 0 && !bossDone;
     if (boss) bossDone = true;                    // на волне босса ещё приходит свита
     // Боссы чередуются: панцирная туша и членистый червь.
@@ -1093,7 +1118,7 @@ function spawn() {
         r: k.r, link: k.link, walk: k.walk, damp: k.damp, mass: k.mass, armor: k.armor,
         color: k.color, dark: k.dark,
         iframe: 0, flash: 0, squeeze: 0, touch: 0,
-        chain: k.chain || 0, step: 0, down: 0, smack: 0,
+        chain: k.chain || 0, step: 0, down: 0, smack: 0, entering: true,
         p: body(x, y, k.link, k.chain || 3), held: false, flying: 0,
     });
 }
@@ -1149,8 +1174,10 @@ function moveFoes(dt) {
         }
         const m = e.r * 0.7;
         for (const q of e.p) {
-            const nx = Math.max(PAD + m, Math.min(W - PAD - m, q.x));
-            const ny = Math.max(PAD + m, Math.min(H - PAD - m, q.y));
+            // Заходящего стены ещё не держат — иначе он прилипнет к кромке
+            // снаружи и войти не сможет вовсе.
+            const nx = e.entering ? q.x : Math.max(PAD + m, Math.min(W - PAD - m, q.x));
+            const ny = e.entering ? q.y : Math.max(PAD + m, Math.min(H - PAD - m, q.y));
             // Влетевшего в стену бьёт о стену: у броска появляется адрес.
             if (q === e.p[1] && (nx !== q.x || ny !== q.y) && e.flying > 0 && e.smack <= 0) {
                 const sp = Math.hypot(q.x - q.px, q.y - q.py) / DT;
@@ -1165,6 +1192,9 @@ function moveFoes(dt) {
         }
         e.smack -= dt;
         e.x = e.p[1].x; e.y = e.p[1].y;
+        // Вошёл целиком — дальше он такой же, как все, и стены его держат.
+        if (e.entering && e.x > PAD + e.r && e.x < W - PAD - e.r
+            && e.y > PAD + e.r && e.y < H - PAD - e.r) e.entering = false;
         // Гипотеза из референса: у прямоугольной арены углы это ловушки.
         // Меряем, сколько времени тела действительно там проводят.
         bodySamples++;
@@ -1813,13 +1843,11 @@ function drawFoeSprite(e) {
     return true;
 }
 
-function drawGround() {
-    const b = biome();
-    if (decoFor !== biomeIdx() || !deco.length) buildDeco();
-
+/** Одна арена: небо и плитка. Вынесено, чтобы их можно было наложить две. */
+function paintBiome(b, alpha) {
+    ctx.globalAlpha = alpha;
     ctx.fillStyle = b.sky;
     ctx.fillRect(-8, -8, W + 16, H + 16);
-
     // Плитка 512 точек кладётся на 256 единиц мира: рисунок в ней крупный,
     // и мельчить его нельзя — по нему считывается перемещение.
     const im = groundTile[b.tile];
@@ -1830,8 +1858,29 @@ function drawGround() {
         ctx.fillStyle = b.pat;
         ctx.fillRect(-16, -16, (W + 32) * 2, (H + 32) * 2);
         ctx.restore();
-    } else {                                   // пока не загрузилась — сетка
-        const step = b.style === 'плиты' ? 74 : 44;
+    }
+    ctx.globalAlpha = 1;
+    return !!(im && im.complete && im.naturalWidth);
+}
+
+function drawGround() {
+    const b = biome();
+    // Арена сменяется переходом, а не подменой кадра: «фигак, и задник
+    // сменился» — первое, что назвал владелец. Полторы секунды наплыва
+    // стоят одной переменной и убирают весь рывок.
+    const idx = biomeIdx();
+    if (biomeShown < 0) { biomeShown = idx; biomeWas = idx; }   // до первого шага
+    if (decoFor !== idx || !deco.length) buildDeco();
+
+    let drawn = true;
+    if (biomeFade < 1) {
+        paintBiome(BIOMES[biomeWas], 1);
+        drawn = paintBiome(b, biomeFade);
+    } else {
+        drawn = paintBiome(b, 1);
+    }
+    if (!drawn) {                                   // пока не загрузилась — сетка
+        const step = b.style === 'плиты' ? 74 : 44;   // пока плитка не доехала
         ctx.strokeStyle = b.line; ctx.lineWidth = 1;
         ctx.beginPath();
         for (let x = 0; x < W; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
@@ -1876,6 +1925,14 @@ function draw() {
     if (shake > 0) ctx.translate(rnd(-2.5, 2.5) * shake, rnd(-2.5, 2.5) * shake);
 
     drawGround();
+    // Где сейчас заходят: расходящееся кольцо на кромке. Оно живёт секунду и
+    // гаснет — этого хватает, чтобы приход читался как приход.
+    for (const m of marks) {
+        const k = 1 - m.t / 1.1;
+        ctx.strokeStyle = 'rgba(226,120,120,' + (m.t * 0.5).toFixed(3) + ')';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(m.x, m.y, 6 + k * 26, 0, 7); ctx.stroke();
+    }
 
     if (trial) {
         const y = trial.goalY, hw = trial.half;
@@ -2370,6 +2427,7 @@ window.naotmash = {
     render() { draw(); return this; },
     state() {
         return { врагов: foes.length, ошмётков: bits.length, отрывов: cntEpic,
+            задник: +biomeFade.toFixed(2), заходят: foes.filter((e) => e.entering).length,
             скорость: Math.round(Math.hypot(...vel(pts[pts.length - 1]))),
             замедление: +slow.toFixed(2), тряска: +shake.toFixed(2) };
     },
@@ -2409,6 +2467,7 @@ if (location.search.includes('flow')) {
         // Снимаем показания до «ещё раз»: она обнуляет забег.
         const snap = { дошёл: wave >= 10, секунд: Math.round(k / 120), счёт: score, убито: kills,
             поверху: cntOver, схват: cntGrip, взрыв: cntBoom, отрывов: cntEpic,
+            переход: Math.round(cntFade / 120), пришло: cntIn,
             награды: taken, бочки: blown,
             углы: bodySamples ? Math.round(inCorner / bodySamples * 100) : 0 };
         hero.hp = 0;
@@ -2429,11 +2488,12 @@ if (location.search.includes('flow')) {
         let out = 'ПРОХОЖДЕНИЕ, прогонов ' + runs + '\n' +
             pad('оружие', 11) + pad('дошёл', 7) + pad('сек', 5) + pad('счёт', 7) +
             pad('убито', 7) + pad('поверху', 9) + pad('схват', 7) + pad('взрыв', 7) +
-            pad('отрыв', 7) + pad('в углах', 7) + 'итог+ещёраз\n';
+            pad('отрыв', 7) + pad('перех', 6) + pad('пришло', 7) + pad('в углах', 7) + 'итог+ещёраз\n';
         for (const r of all) {
             out += pad(r.оружие, 11) + pad(r.дошёл ? 'да' : 'НЕТ', 7) + pad(r.секунд, 5) +
                 pad(r.счёт, 7) + pad(r.убито, 7) + pad(r.поверху, 9) + pad(r.схват, 7) +
-                pad(r.взрыв, 7) + pad(r.отрывов, 7) + pad(r.углы + '%', 7) +
+                pad(r.взрыв, 7) + pad(r.отрывов, 7) + pad(r.переход + 'с', 6) +
+                pad(r.пришло, 7) + pad(r.углы + '%', 7) +
                 ((r.окно && r.начало && r.итог && r.ещёраз) ? 'ок' : 'СЛОМАНО') + '\n';
         }
         const fired = (key) => all.filter((r) => r[key] > 0).length;

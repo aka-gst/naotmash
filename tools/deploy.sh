@@ -75,21 +75,31 @@ for entry in $SHIP; do
     echo "ОШИБКА: не уехало: $entry" >&2; exit 1; }
 done
 
-code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "https://aka-gst.ru/$GAME_PATH/" || echo "нет ответа")
+# Сеть даёт 2–7% обрывов, и `000` это обрыв, а не 404. Без ретраев проверка
+# врёт про выкладку, которая на самом деле прошла: за один вечер дважды.
+http_code() {   # имя латиницей: sh кириллицу в именах функций не принимает
+  for _ in 1 2 3 4; do
+    c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$1" || true)
+    case "$c" in 000|"") sleep 2 ;; *) echo "$c"; return ;; esac
+  done
+  echo 000
+}
+
+code=$(http_code "https://aka-gst.ru/$GAME_PATH/")
 echo "  /$GAME_PATH/  $code"
 [ "$code" = 200 ] || { echo "ОШИБКА: страница не отвечает 200" >&2; exit 1; }
 
 # 200 у страницы ничего не говорит про картинки: проверяем, что они правда
 # доехали и правда отдаются.
 for probe in sprites/hero-body.svg field/field-yard.png; do
-  c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "https://aka-gst.ru/$GAME_PATH/$probe" || echo нет)
+  c=$(http_code "https://aka-gst.ru/$GAME_PATH/$probe")
   echo "  $probe  $c"
   [ "$c" = 200 ] || { echo "ОШИБКА: картинка не отдаётся" >&2; exit 1; }
 done
 
 # Белый список должен был оставить внутреннее дома. Проверяем это, а не верим.
 for hide in README.md TODO.md ФИНИШ.md ИДЕИ.md tools/deploy.sh sprites.json .git/HEAD; do
-  c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "https://aka-gst.ru/$GAME_PATH/$hide" || echo нет)
+  c=$(http_code "https://aka-gst.ru/$GAME_PATH/$hide")
   [ "$c" = 404 ] || { echo "ОШИБКА: $hide отдаётся кодом $c, а должен 404" >&2; exit 1; }
 done
 echo "  внутренние файлы: все 404" 
