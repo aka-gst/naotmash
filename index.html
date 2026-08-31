@@ -146,7 +146,9 @@
 
 <button id="gear" aria-label="настройки"></button>
 
-<div id="panel">
+<!-- Скрыт разметкой, а не скриптом: если скрипт упадёт, наши внутренности
+     не должны оказаться на экране вместо игры. -->
+<div id="panel" class="off">
   <div class="grp"><span>длина <i id="v-len">7</i></span><button data-a="len-">−</button><button data-a="len+">+</button></div>
   <div class="grp"><span>вес кончика <i id="v-tip">30</i>%</span><button data-a="tip-">−</button><button data-a="tip+">+</button></div>
   <div class="grp"><span>упругость <i id="v-bend">5</i></span><button data-a="bend-">−</button><button data-a="bend+">+</button></div>
@@ -1383,9 +1385,31 @@ function play(key, vol, rate) {
  * оживает сам при переразмере окна и при возврате во вкладку, и обход снова
  * слышно на колонках. Съёмочные и проверочные режимы молчат сами.
  */
-const ASK = decodeURIComponent(location.search);
-const QUIET = /(^|[?&#])(тихо|quiet)(=1|=true)?([&#]|$)/i.test(ASK)   // общее на все игры
-    || /(^|[?&#])(loop|петля|кадр|still|flow|test)(=|[&#]|$)/i.test(ASK);
+// Битый процент в адресе (`?%zz`) — обычное дело: мессенджер обрезал ссылку,
+// автозамена съела символ. decodeURIComponent на таком бросает URIError, а
+// разбор стоит во входном файле — значит рушится вся игра, а не параметр.
+// Человек по такой ссылке видел отладочный пульт вместо выбора оружия.
+/**
+ * Весь разбор адреса — одной чистой функцией, чтобы его можно было позвать из
+ * проверки без браузера (`node tools/proverka-adresa.mjs`). Разбор, живущий
+ * только во входном файле, — слепое пятно: ошибка в нём переживает любые
+ * зелёные наборы, потому что запустить его негде.
+ */
+function readAddress(raw) {
+    let ask = raw;
+    try { ask = decodeURIComponent(raw); } catch { /* битый процент — берём как есть */ }
+    const still = /(^|[?&#])(кадр|still)(=|[&#]|$)/i.test(ask);
+    return {
+        ask,
+        quiet: /(^|[?&#])(тихо|quiet)(=1|=true)?([&#]|$)/i.test(ask)   // общее на все игры
+            || /(^|[?&#])(loop|петля|кадр|still|flow|test)(=|[&#]|$)/i.test(ask),
+        still,
+        loop: still ? 3 : parseInt((ask.match(/(?:петля|loop)=(\d+)/) || [])[1], 10),
+    };
+}
+const ADDR = readAddress(location.search);
+const ASK = ADDR.ask;
+const QUIET = ADDR.quiet;
 
 /** Контекст можно завести только из настоящего касания. */
 function audioOn() {
@@ -2431,9 +2455,8 @@ if (location.search.includes('flow')) {
 // Неподвижный кадр для карточки на витрине: сцена ставится, отрыв
 // случается, и всё замирает в один и тот же миг. Снимающему не нужно ловить
 // момент — кадр повторяется байт в байт.
-const stillFrame = /кадр|still/.test(decodeURIComponent(location.search));
-const loopN = stillFrame ? 3 : parseInt((location.search.match(/(?:петля|loop)=(\d+)/) ||
-    location.search.match(/(?:%D0%BF%D0%B5%D1%82%D0%BB%D1%8F)=(\d+)/) || [])[1], 10);
+const stillFrame = ADDR.still;
+const loopN = ADDR.loop;
 if (loopN >= 1 && loopN <= 3) {
     const N = window.naotmash;
     const setup = () => {

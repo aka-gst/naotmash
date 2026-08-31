@@ -55,6 +55,10 @@ if miss:
     sys.exit(1)
 PY
 
+# Разбор адреса проверяется без браузера: битый процент в ссылке однажды
+# уронил весь модуль и показал человеку отладочный пульт вместо игры.
+node "$HERE/tools/proverka-adresa.mjs" || exit 1
+
 for entry in $SHIP; do
   [ -e "$HERE/$entry" ] || { echo "ОШИБКА: нет $entry" >&2; exit 1; }
 done
