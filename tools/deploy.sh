@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Выкладка «Наотмашь» на aka-gst.ru/worm/.
+# Выкладка «Наотмашь» на aka-gst.ru/naotmash/ (папка на сервере — worm).
 #
 #   sh tools/deploy.sh            показать, что уедет
 #   sh tools/deploy.sh --deploy   и выложить
