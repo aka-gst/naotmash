@@ -39,6 +39,7 @@ const случаи = [
     ['?loop=1',          true,  false, 1],
     ['?петля=2',         true,  false, 2],
     ['?flow=8',          true,  false, пусто],
+    ['?flow=8&страж',    true,  false, пусто],
 ];
 
 let плохо = 0;
@@ -49,6 +50,15 @@ for (const [адрес, тихо, кадр, петля] of случаи) {
     const ждём = typeof петля === 'function' ? петля(r.loop) : r.loop === петля;
     if (r.quiet !== тихо || r.still !== кадр || !ждём) {
         console.error(`НЕ СОШЛОСЬ "${адрес}": тихо=${r.quiet} кадр=${r.still} петля=${r.loop}`);
+        плохо++;
+    }
+}
+
+// Бот-страж включается только своим параметром и ничем ещё.
+for (const [адрес, ждём] of [['?flow=8&страж', true], ['?flow=8&guard', true],
+    ['?flow=8', false], ['?w=guardian', false]]) {
+    if (readAddress(адрес).guard !== ждём) {
+        console.error(`СТРАЖ НЕ СОШЁЛСЯ "${адрес}": ${readAddress(адрес).guard}`);
         плохо++;
     }
 }

@@ -206,6 +206,28 @@ const DMG_K = 0.43;          // урон растёт по корню скоро
 const TEAR = 80;             // выше этого удар по голове отрывает её напрочь
 const ROCK_MAX = 1100;       // потолок скорости камня, единиц мира в секунду
 const PAD = 6;
+// Слева стена, за ней замок, в стене ворота. Игра больше не «отбивайся на
+// пустой арене»: у неё есть место, которое нельзя отдать. Отсюда выбор,
+// которого раньше не было — стоять у ворот или уйти чистить тех, кто лезет
+// через стену выше и ниже.
+const WALL = 34;             // толщина стены, единиц мира
+const GATE_H = 150;          // высота проёма ворот
+const CLIMB = 4.2;           // сколько секунд враг лезет через стену
+const gate = { hp: 100, hp0: 100, hit: 0, over: 0 };
+const gateTop = () => H / 2 - GATE_H / 2;
+const gateBot = () => H / 2 + GATE_H / 2;
+/**
+ * Куда идёт враг. Треть лезет через стену выше или ниже ворот — иначе стоять
+ * у проёма выгодно всегда, и «иногда отходить» не случается никогда: замер
+ * показал, что стерегущий ворота бот держит их в 8 партиях из 8, ни разу не
+ * отойдя. Выбор появляется только тогда, когда есть кого пропустить.
+ */
+function pickWallSpot() {
+    if (Math.random() < 0.64) return H / 2;
+    const above = Math.random() < 0.5;
+    return above ? rnd(40, gateTop() - 20) : rnd(gateBot() + 20, H - 40);
+}
+const gateAim = (e) => ({ x: WALL + 16, y: e && e.wallY !== undefined ? e.wallY : H / 2 });
 /**
  * Короткая сторона экрана — это всегда 450 единиц мира. Иначе на узком
  * телефоне те же 900 ед/с означают вдвое более быстрый полёт по арене,
@@ -331,7 +353,7 @@ let deco = [], decoFor = -1;      // неподвижное убранство �
 let dec = null, decCtx = null;    // слой следов: он не перерисовывается
 let rock = null;
 let aim = { x: 0, y: 0, down: false };
-let best = 0, spawnTimer = 0, shake = 0, dead = 0;
+let best = 0, spawnTimer = 0, shake = 0, dead = 0, gateLost = false;
 let hero = null, held = null, tense = false, slow = 0;
 let started = false, menu = false;
 let score = 0, kills = 0, record = 0;
@@ -377,6 +399,8 @@ function reset() {
     rock = { x: W / 2, y: H * 0.28, vx: 0, vy: 0, r: 19 };
     aim = { x: W / 2, y: H / 2, down: false };
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
+    gateLost = false; gate.hp = gate.hp0; gate.hit = 0; gate.over = 0;
+    marks = []; biomeShown = -1; biomeWas = -1; biomeFade = 1;
     trial = null; trials = 0; boons = []; taken = 0; barrels = []; blown = 0;
     gripped = null; hooked = null;
     cntOver = 0; cntGrip = 0; cntBoom = 0; cntEpic = 0; cntFade = 0; cntIn = 0; inCorner = 0; bodySamples = 0;
@@ -470,7 +494,7 @@ function step(dt) {
         // здесь недопустим: он ограничивает руку скоростью шага, и хлыст глохнет.
         const walk = Math.min(over, (HERO_SPEED + over * 4.5) * dt);
         hero.x += ux * walk; hero.y += uy * walk;
-        hero.x = Math.max(PAD + HERO_R, Math.min(W - PAD - HERO_R, hero.x));
+        hero.x = Math.max(WALL + HERO_R, Math.min(W - PAD - HERO_R, hero.x));
         hero.y = Math.max(PAD + HERO_R, Math.min(H - PAD - HERO_R, hero.y));
         h.x -= ux * over * 0.16; h.y -= uy * over * 0.16;   // рука тянется, а не упирается
     }
@@ -557,7 +581,7 @@ function solve(a, b, i, lockA) {
 function bounce(p, r) {
     const vx = p.x - p.px, vy = p.y - p.py;
     let hit = false;
-    if (p.x < PAD + r) { p.x = PAD + r; hit = true; }
+    if (p.x < WALL + r) { p.x = WALL + r; hit = true; }
     if (p.x > W - PAD - r) { p.x = W - PAD - r; hit = true; }
     if (hit) p.px = p.x + vx * 0.5;
     hit = false;
@@ -760,9 +784,9 @@ function combat(dt) {
         const fr = b.fr || 0.955;
         b.vx *= fr; b.vy *= fr;
         b.ang += b.spin * dt;
-        if (b.x < PAD + b.r || b.x > W - PAD - b.r) { b.vx *= -0.5; b.spin *= -0.7; }
+        if (b.x < WALL + b.r || b.x > W - PAD - b.r) { b.vx *= -0.5; b.spin *= -0.7; }
         if (b.y < PAD + b.r || b.y > H - PAD - b.r) { b.vy *= -0.5; b.spin *= -0.7; }
-        b.x = Math.max(PAD + b.r, Math.min(W - PAD - b.r, b.x));
+        b.x = Math.max(WALL + b.r, Math.min(W - PAD - b.r, b.x));
         b.y = Math.max(PAD + b.r, Math.min(H - PAD - b.r, b.y));
     }
     for (const b of bits) {
@@ -784,6 +808,7 @@ function combat(dt) {
     for (const n of nums) { n.t -= dt; n.y -= 26 * dt; }
     nums = nums.filter((n) => n.t > 0);
     if (shake > 0) shake = Math.max(0, shake - dt * 6);
+    if (gate.hit > 0) gate.hit = Math.max(0, gate.hit - dt * 3);
     // Смена арены — состояние, а не рисование: держать её в drawGround
     // значит поставить ход игры в зависимость от того, рисуем ли мы сейчас.
     // Проверить такое без экрана нельзя, и первая же проба это показала.
@@ -796,6 +821,21 @@ function combat(dt) {
     if (biomeFade < 1) { biomeFade = Math.min(1, biomeFade + dt / 1.5); cntFade++; }
     for (const m of marks) m.t -= dt;
     marks = marks.filter((m) => m.t > 0);
+}
+
+/** Ворота теряют здоровье видимо: трещинами и креном, а не числом. */
+function hurtGate(dmg, y) {
+    if (gate.hp <= 0) return;
+    gate.hp = Math.max(0, gate.hp - dmg);
+    gate.hit = 1;
+    shake = Math.min(1, shake + dmg / 40);
+    blip(90 + rnd(0, 30), 0.16, 'square', 0.13, 50);
+    for (let k = 0; k < 3; k++) {
+        bits.push({ x: WALL + 6, y: (y || H / 2) + rnd(-14, 14),
+            vx: rnd(40, 220), vy: rnd(-140, 140),
+            r: rnd(1.6, 3.2), ang: 0, spin: rnd(-9, 9), t: 0.45, wet: '#5a4630' });
+    }
+    if (gate.hp <= 0) { dead = 1.4; gateLost = true; blip(60, 0.9, 'sawtooth', 0.26, 30); }
 }
 
 function hurt(e, dmg, kx, ky, part) {
@@ -1097,10 +1137,12 @@ function spawn() {
     // единицах внутри поля — со стороны это читалось телепортацией: «фигак,
     // и новые монстры». Разница только в знаке координаты, а ощущение другое:
     // видно, откуда идут, и есть секунда развернуться.
-    const edge = Math.floor(rnd(0, 4));
+    // Слева стена — оттуда никто не приходит. Враги идут снаружи замка:
+    // справа, сверху и снизу.
+    const edge = Math.floor(rnd(0, 3));
     const out = 42;
-    const x = edge === 0 ? -out : edge === 1 ? W + out : rnd(30, W - 30);
-    const y = edge === 2 ? -out : edge === 3 ? H + out : rnd(30, H - 30);
+    const x = edge === 0 ? W + out : rnd(WALL + 40, W - 30);
+    const y = edge === 1 ? -out : edge === 2 ? H + out : rnd(30, H - 30);
     // Метка на кромке: показывает место входа, пока сам он ещё за экраном.
     marks.push({
         x: Math.max(10, Math.min(W - 10, x)),
@@ -1118,7 +1160,7 @@ function spawn() {
         r: k.r, link: k.link, walk: k.walk, damp: k.damp, mass: k.mass, armor: k.armor,
         color: k.color, dark: k.dark,
         iframe: 0, flash: 0, squeeze: 0, touch: 0,
-        chain: k.chain || 0, step: 0, down: 0, smack: 0, entering: true,
+        chain: k.chain || 0, step: 0, down: 0, smack: 0, entering: true, wallY: pickWallSpot(),
         p: body(x, y, k.link, k.chain || 3), held: false, flying: 0,
     });
 }
@@ -1151,8 +1193,16 @@ function moveFoes(dt) {
             q.px = q.x; q.py = q.y;
             q.x += vx; q.y += vy;
         }
-        const dx = hero.x - e.p[1].x, dy = hero.y - e.p[1].y;
-        const d = Math.hypot(dx, dy) || 1;
+        // Враг идёт к воротам, а не к герою: герой ему не нужен, ему нужен
+        // замок. Но вблизи он переключается на героя — иначе мимо стоящего
+        // игрока толпа просто протекает, и драки нет вовсе.
+        const hx = hero.x - e.p[1].x, hy = hero.y - e.p[1].y;
+        const hd = Math.hypot(hx, hy) || 1;
+        const aim = gateAim(e);
+        const toHero = hd < 96 || gate.hp <= 0 || e.boss;
+        const dx = toHero ? hx : aim.x - e.p[1].x;
+        const dy = toHero ? hy : aim.y - e.p[1].y;
+        const d = toHero ? hd : (Math.hypot(dx, dy) || 1);
         if (e.down > 0) {
             e.down -= dt;                           // лежит: не идёт и не мешает
         } else if (e.flying > 0) {
@@ -1176,7 +1226,7 @@ function moveFoes(dt) {
         for (const q of e.p) {
             // Заходящего стены ещё не держат — иначе он прилипнет к кромке
             // снаружи и войти не сможет вовсе.
-            const nx = e.entering ? q.x : Math.max(PAD + m, Math.min(W - PAD - m, q.x));
+            const nx = e.entering ? q.x : Math.max(WALL + m, Math.min(W - PAD - m, q.x));
             const ny = e.entering ? q.y : Math.max(PAD + m, Math.min(H - PAD - m, q.y));
             // Влетевшего в стену бьёт о стену: у броска появляется адрес.
             if (q === e.p[1] && (nx !== q.x || ny !== q.y) && e.flying > 0 && e.smack <= 0) {
@@ -1192,8 +1242,35 @@ function moveFoes(dt) {
         }
         e.smack -= dt;
         e.x = e.p[1].x; e.y = e.p[1].y;
+        if (!e.entering && !e.dead && e.down <= 0 && gate.hp > 0) {
+            const уСтены = e.x < WALL + e.r + 10;
+            const уВорот = уСтены && e.y > gateTop() && e.y < gateBot();
+            if (уВорот) {
+                // Ворота грызут: урон идёт постоянно, пока враг стоит вплотную.
+                e.gnaw = (e.gnaw || 0) + dt;
+                if (e.gnaw > 0.6) {
+                    e.gnaw = 0;
+                    hurtGate(2.6 * e.mass, e.y);
+                }
+                e.climb = 0;
+            } else if (уСтены) {
+                // Мимо ворот — лезет через стену. Это и есть повод отойти:
+                // стоять у ворот безопасно, но пролезших не увидишь.
+                e.climb = (e.climb || 0) + dt;
+                if (e.climb >= CLIMB) {
+                    e.climb = 0;
+                    hurtGate(9, e.y);
+                    gate.over++;
+                    for (let k = 0; k < 8; k++) {
+                        bits.push({ x: e.x, y: e.y, vx: rnd(-160, 60), vy: rnd(-160, 160),
+                            r: rnd(2, 4), ang: 0, spin: rnd(-8, 8), t: 0.5, wet: e.dark });
+                    }
+                    e.dead = true;      // перелез: он уже внутри, его не достать
+                }
+            } else { e.climb = 0; e.gnaw = 0; }
+        }
         // Вошёл целиком — дальше он такой же, как все, и стены его держат.
-        if (e.entering && e.x > PAD + e.r && e.x < W - PAD - e.r
+        if (e.entering && e.x > WALL + e.r && e.x < W - PAD - e.r
             && e.y > PAD + e.r && e.y < H - PAD - e.r) e.entering = false;
         // Гипотеза из референса: у прямоугольной арены углы это ловушки.
         // Меряем, сколько времени тела действительно там проводят.
@@ -1336,9 +1413,13 @@ function showResult() {
         record = score;
         try { localStorage.setItem('worm-record', String(record)); } catch { /* приватный режим */ }
     }
-    $('over').innerHTML = '<h1>' + (beaten ? 'Новый рекорд' : 'Викинг пал') + '</h1>' +
+    // Проигрыш через ворота — отдельный, и слова другие. «Сам жив, но не
+    // удержал» обиднее смерти, и тянет попробовать ещё раз сильнее.
+    $('over').innerHTML = '<h1>' + (gateLost ? 'Ворота пали' : beaten ? 'Новый рекорд' : 'Викинг пал') + '</h1>' +
+        (gateLost ? '<p class="rec">замок взяли, а ты цел. в следующий раз не отходи так далеко</p>' : '') +
         '<ul>' +
         '<li>дошёл до волны <b>' + wave + '</b>, убил <b>' + kills + '</b></li>' +
+        (gate.over ? '<li>через стену перелезло <b>' + gate.over + '</b></li>' : '') +
         '<li>лучший удар <b>' + Math.round(best) + '</b></li>' +
         '<li>счёт <b>' + score + '</b>' + (beaten ? '' : ' · рекорд <b>' + record + '</b>') + '</li>' +
         '</ul>' +
@@ -1434,6 +1515,10 @@ function readAddress(raw) {
         quiet: /(^|[?&#])(тихо|quiet)(=1|=true)?([&#]|$)/i.test(ask)   // общее на все игры
             || /(^|[?&#])(loop|петля|кадр|still|flow|test)(=|[&#]|$)/i.test(ask),
         still,
+        // Бот-страж: кружит у ворот, а не посреди арены. Нужен, чтобы у
+        // проверки был и зелёный исход: если ворота не удерживает и он,
+        // оборона невыполнима, а невыполнимое человек считает поломкой.
+        guard: /(^|[?&#])(страж|guard)(=|[&#]|$)/i.test(ask),
         loop: still ? 3 : parseInt((ask.match(/(?:петля|loop)=(\d+)/) || [])[1], 10),
     };
 }
@@ -1843,6 +1928,81 @@ function drawFoeSprite(e) {
     return true;
 }
 
+/**
+ * Стена слева и ворота в ней. Здоровье ворот показано трещинами и креном
+ * створки, а не числом: цифру в углу не замечают, а расходящуюся щель видно
+ * боковым зрением, не отрываясь от боя.
+ */
+function drawWall() {
+    const k = gate.hp / gate.hp0;                 // 1 целые, 0 пали
+    const t0 = gateTop(), t1 = gateBot();
+
+    ctx.fillStyle = '#3a3f46';                    // кладка
+    ctx.fillRect(0, 0, WALL, H);
+    ctx.fillStyle = '#2b2f35';
+    for (let y = 0; y < H; y += 26) {
+        ctx.fillRect(0, y + ((y / 26) % 2 ? 0 : 13), WALL, 2);
+    }
+    ctx.fillStyle = '#4a5058';
+    ctx.fillRect(WALL - 4, 0, 4, H);              // кромка, по ней читается край
+
+    // Проём: створки. Целые сходятся посередине, битые расходятся.
+    const gap = (1 - k) * 26;
+    ctx.fillStyle = '#141719';
+    ctx.fillRect(0, t0, WALL, t1 - t0);
+    const leaf = (y0, y1, dir) => {
+        ctx.save();
+        ctx.translate(WALL / 2, dir > 0 ? y1 : y0);
+        ctx.rotate(dir * gap * 0.006);
+        const h = (y1 - y0) - gap / 2;
+        ctx.fillStyle = gate.hit > 0 ? '#8a5c3a' : '#6b4a2f';
+        ctx.fillRect(-WALL / 2 + 2, dir > 0 ? -h : 0, WALL - 4, h);
+        ctx.fillStyle = '#503722';
+        for (let i = 1; i < 4; i++) {
+            const yy = (dir > 0 ? -h : 0) + h * i / 4;
+            ctx.fillRect(-WALL / 2 + 2, yy, WALL - 4, 1.5);
+        }
+        ctx.fillStyle = '#8d949c';                // оковка
+        ctx.fillRect(-WALL / 2 + 2, (dir > 0 ? -h : 0) + h * 0.28, WALL - 4, 3);
+        ctx.restore();
+    };
+    leaf(t0, (t0 + t1) / 2, -1);
+    leaf((t0 + t1) / 2, t1, 1);
+
+    // Трещины: их число растёт с уроном, поэтому «сколько осталось» видно
+    // не приглядываясь.
+    const cracks = Math.round((1 - k) * 9);
+    ctx.strokeStyle = 'rgba(20,16,14,.85)'; ctx.lineWidth = 1.6;
+    for (let i = 0; i < cracks; i++) {
+        const y = t0 + ((i * 37) % (t1 - t0));
+        ctx.beginPath();
+        ctx.moveTo(3, y);
+        ctx.lineTo(WALL - 3, y + (i % 2 ? 11 : -11));
+        ctx.stroke();
+    }
+    if (gate.hit > 0) {                            // вспышка удара
+        ctx.fillStyle = 'rgba(255,120,80,' + (gate.hit * 0.35).toFixed(3) + ')';
+        ctx.fillRect(0, t0, WALL, t1 - t0);
+    }
+    if (gate.hp <= 0) {
+        ctx.fillStyle = 'rgba(0,0,0,.75)';
+        ctx.fillRect(0, t0, WALL, t1 - t0);
+    }
+
+    // Кто лезет через стену — и сколько ему осталось.
+    for (const e of foes) {
+        if (!e.climb) continue;
+        const p = e.climb / CLIMB;
+        ctx.strokeStyle = 'rgba(255,190,90,.9)'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(WALL - 2, e.y + 12);
+        ctx.lineTo(WALL - 2, e.y + 12 - 24 * p);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,190,90,.85)';
+        ctx.beginPath(); ctx.arc(WALL - 2, e.y + 12 - 24 * p, 3, 0, 7); ctx.fill();
+    }
+}
+
 /** Одна арена: небо и плитка. Вынесено, чтобы их можно было наложить две. */
 function paintBiome(b, alpha) {
     ctx.globalAlpha = alpha;
@@ -1927,6 +2087,7 @@ function draw() {
     drawGround();
     // Где сейчас заходят: расходящееся кольцо на кромке. Оно живёт секунду и
     // гаснет — этого хватает, чтобы приход читался как приход.
+    drawWall();
     for (const m of marks) {
         const k = 1 - m.t / 1.1;
         ctx.strokeStyle = 'rgba(226,120,120,' + (m.t * 0.5).toFixed(3) + ')';
@@ -2428,6 +2589,7 @@ window.naotmash = {
     state() {
         return { врагов: foes.length, ошмётков: bits.length, отрывов: cntEpic,
             задник: +biomeFade.toFixed(2), заходят: foes.filter((e) => e.entering).length,
+            ворота: Math.round(gate.hp), перелезло: gate.over,
             скорость: Math.round(Math.hypot(...vel(pts[pts.length - 1]))),
             замедление: +slow.toFixed(2), тряска: +shake.toFixed(2) };
     },
@@ -2456,18 +2618,26 @@ if (location.search.includes('flow')) {
 
         aim.down = true;
         let k = 0;
-        while (wave < 10 && k < 120 * 1500) {
+        // У партии стало три конца, а прогон знал один. Проверка, написанная
+        // под прежнее решение, показывает «не дошёл» там, где партия честно
+        // закончилась, и крутит пустоту до упора по времени.
+        while (wave < 10 && k < 120 * 1500 && !gateLost && dead <= 0 && !$('over').classList.contains('on')) {
             const t = k++ / 120;
-            aim.x = W / 2 + Math.cos(t * 7) * 120;
-            aim.y = H / 2 + Math.sin(t * 7) * 120;
+            const cx = ADDR.guard ? WALL + 88 : W / 2;
+            const cy = H / 2;
+            const rr = ADDR.guard ? 76 : 120;
+            aim.x = cx + Math.cos(t * 7) * rr;
+            aim.y = cy + Math.sin(t * 7) * rr;
             if (paused) startWave();
             hero.hp = hero.hpMax;             // бессмертие: проверяем прохождение, не бой
             step(1 / 120);
         }
         // Снимаем показания до «ещё раз»: она обнуляет забег.
-        const snap = { дошёл: wave >= 10, секунд: Math.round(k / 120), счёт: score, убито: kills,
+        const исход = gateLost ? 'ворота' : wave >= 10 ? 'волны' : dead > 0 || $('over').classList.contains('on') ? 'смерть' : 'время';
+        const snap = { дошёл: wave >= 10, исход, секунд: Math.round(k / 120), счёт: score, убито: kills,
             поверху: cntOver, схват: cntGrip, взрыв: cntBoom, отрывов: cntEpic,
             переход: Math.round(cntFade / 120), пришло: cntIn,
+            ворота: Math.round(gate.hp), перелезло: gate.over, воротаПали: gateLost,
             награды: taken, бочки: blown,
             углы: bodySamples ? Math.round(inCorner / bodySamples * 100) : 0 };
         hero.hp = 0;
@@ -2486,14 +2656,14 @@ if (location.search.includes('flow')) {
 
         const pad = (x, n) => String(x).padEnd(n);
         let out = 'ПРОХОЖДЕНИЕ, прогонов ' + runs + '\n' +
-            pad('оружие', 11) + pad('дошёл', 7) + pad('сек', 5) + pad('счёт', 7) +
+            pad('оружие', 11) + pad('исход', 8) + pad('сек', 5) + pad('счёт', 7) +
             pad('убито', 7) + pad('поверху', 9) + pad('схват', 7) + pad('взрыв', 7) +
-            pad('отрыв', 7) + pad('перех', 6) + pad('пришло', 7) + pad('в углах', 7) + 'итог+ещёраз\n';
+            pad('отрыв', 7) + pad('перех', 6) + pad('ворота', 7) + pad('перелез', 8) + 'итог+ещёраз\n';
         for (const r of all) {
-            out += pad(r.оружие, 11) + pad(r.дошёл ? 'да' : 'НЕТ', 7) + pad(r.секунд, 5) +
+            out += pad(r.оружие, 11) + pad(r.исход, 8) + pad(r.секунд, 5) +
                 pad(r.счёт, 7) + pad(r.убито, 7) + pad(r.поверху, 9) + pad(r.схват, 7) +
                 pad(r.взрыв, 7) + pad(r.отрывов, 7) + pad(r.переход + 'с', 6) +
-                pad(r.пришло, 7) + pad(r.углы + '%', 7) +
+                pad(r.воротаПали ? 'ПАЛИ' : r.ворота, 7) + pad(r.перелезло, 8) +
                 ((r.окно && r.начало && r.итог && r.ещёраз) ? 'ок' : 'СЛОМАНО') + '\n';
         }
         const fired = (key) => all.filter((r) => r[key] > 0).length;
