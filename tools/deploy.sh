@@ -17,7 +17,12 @@ DEPLOY=no
 [ "${1:-}" = "--deploy" ] && DEPLOY=yes
 SSH_HOST="${SSH_HOST:-bonita}"
 SITE_ROOT="${SITE_ROOT:-/opt/zakriva/caddy/site}"
-GAME_PATH="${GAME_PATH:-worm}"
+GAME_PATH="${GAME_PATH:-worm}"          # папка на сервере
+# Имя, по которому игру открывают люди. Оно разошлось с папкой: игра долго
+# жила по /worm/ от первого концепта про червя, а теперь у неё свой адрес и
+# со старого стоит редирект. Проверять надо то имя, которое даём человеку,
+# а не то, куда кладём файлы.
+PUBLIC_PATH="${PUBLIC_PATH:-naotmash}"
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$HERE/index.html"
@@ -79,29 +84,29 @@ done
 # врёт про выкладку, которая на самом деле прошла: за один вечер дважды.
 http_code() {   # имя латиницей: sh кириллицу в именах функций не принимает
   for _ in 1 2 3 4; do
-    c=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$1" || true)
+    c=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 20 "$1" || true)   # -L: адрес может переехать
     case "$c" in 000|"") sleep 2 ;; *) echo "$c"; return ;; esac
   done
   echo 000
 }
 
-code=$(http_code "https://aka-gst.ru/$GAME_PATH/")
-echo "  /$GAME_PATH/  $code"
+code=$(http_code "https://aka-gst.ru/$PUBLIC_PATH/")
+echo "  /$PUBLIC_PATH/  $code"
 [ "$code" = 200 ] || { echo "ОШИБКА: страница не отвечает 200" >&2; exit 1; }
 
 # 200 у страницы ничего не говорит про картинки: проверяем, что они правда
 # доехали и правда отдаются.
 for probe in sprites/hero-body.svg field/field-yard.png; do
-  c=$(http_code "https://aka-gst.ru/$GAME_PATH/$probe")
+  c=$(http_code "https://aka-gst.ru/$PUBLIC_PATH/$probe")
   echo "  $probe  $c"
   [ "$c" = 200 ] || { echo "ОШИБКА: картинка не отдаётся" >&2; exit 1; }
 done
 
 # Белый список должен был оставить внутреннее дома. Проверяем это, а не верим.
 for hide in README.md TODO.md ФИНИШ.md ИДЕИ.md tools/deploy.sh sprites.json .git/HEAD; do
-  c=$(http_code "https://aka-gst.ru/$GAME_PATH/$hide")
+  c=$(http_code "https://aka-gst.ru/$PUBLIC_PATH/$hide")
   [ "$c" = 404 ] || { echo "ОШИБКА: $hide отдаётся кодом $c, а должен 404" >&2; exit 1; }
 done
 echo "  внутренние файлы: все 404" 
 echo
-echo "готово: https://aka-gst.ru/$GAME_PATH/"
+echo "готово: https://aka-gst.ru/$PUBLIC_PATH/"

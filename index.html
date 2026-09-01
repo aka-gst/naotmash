@@ -100,7 +100,12 @@
         background: #2f6b4a; border-color: #3d8a60; padding: 13px !important; }
 
   .game-home-menu {
-    position: fixed; z-index: 1000; display: block;
+    /* Не меньше 44 точек по обеим сторонам: это требование владельца и
+       палец у него, а не у нас. Здесь оно важнее обычного — кнопка висит
+       над игровым полем, и промах по ней это касание по игре. */
+    position: fixed; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 44px; min-width: 44px;
     top: max(10px, env(safe-area-inset-top));
     right: max(10px, env(safe-area-inset-right));
     padding: 10px 12px; border: 1px solid #76ff9f; background: #0b1010f2; color: #f7f1ff;
@@ -115,8 +120,8 @@
   #panel.off { display: none; }
   #gear {
     position: absolute; right: 10px; z-index: 6;
-    top: calc(56px + max(10px, env(safe-area-inset-top)));   /* под кнопкой сайта */
-    width: 34px; height: 34px; padding: 0; font-size: 15px; line-height: 34px;
+    top: calc(66px + max(10px, env(safe-area-inset-top)));   /* под кнопкой сайта */
+    width: 44px; height: 44px; padding: 0; font-size: 15px; line-height: 44px;
     background: #161c24cc; border: 1px solid #263140; border-radius: 9px;
   }
 
