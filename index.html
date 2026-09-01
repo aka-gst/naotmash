@@ -2444,6 +2444,14 @@ $('over').addEventListener('click', (ev) => {
     showStart();
 });
 
+// Кнопка «на главную» висит над полем, а игра водится пальцем по всему
+// экрану: один замах в угол — и партия кончилась молча. Это уже стоило
+// владельцу прогресса в другой игре, поэтому начатую партию спрашиваем.
+document.querySelector('.game-home-menu').addEventListener('click', (ev) => {
+    if (!started || dead > 0 || menu) return;      // партия не идёт — уходим сразу
+    if (!confirm('Точно выйти? Партия и счёт потеряются.')) ev.preventDefault();
+});
+
 $('start').addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
     if (!b) return;
