@@ -1447,7 +1447,7 @@ function showStart() {
 
 /* ──────────────────────────────── Звук ─────────────────────────────────── */
 
-let ac = null, hiss = null, hissGain = null, hissBand = null;
+let ac = null, hiss = null, hissGain = null, hissBand = null, bus = null, meter = null;
 
 /**
  * Записанные звуки. Грузятся лениво, после первого касания: игра должна
@@ -1485,7 +1485,7 @@ function play(key, vol, rate) {
     src.playbackRate.value = rate || 1;
     const g = ac.createGain();
     g.gain.value = vol;
-    src.connect(g).connect(ac.destination);
+    src.connect(g).connect(bus);
     src.start();
     return true;
 }
@@ -1532,6 +1532,12 @@ function audioOn() {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ac = new AC();
+    // Общий узел: всё, что звучит, идёт через него, и на нём же висит
+    // измеритель. Без такого узла «слышно ли» проверить нечем — приходится
+    // верить, что вызвали нужную функцию.
+    bus = ac.createGain(); bus.gain.value = 1;
+    meter = ac.createAnalyser(); meter.fftSize = 2048;
+    bus.connect(meter); meter.connect(ac.destination);
     const n = ac.sampleRate * 1.5 | 0;
     const buf = ac.createBuffer(1, n, ac.sampleRate);
     const d = buf.getChannelData(0);
@@ -1539,7 +1545,7 @@ function audioOn() {
     hiss = ac.createBufferSource(); hiss.buffer = buf; hiss.loop = true;
     hissBand = ac.createBiquadFilter(); hissBand.type = 'bandpass'; hissBand.Q.value = 1.3;
     hissGain = ac.createGain(); hissGain.gain.value = 0;
-    hiss.connect(hissBand).connect(hissGain).connect(ac.destination);
+    hiss.connect(hissBand).connect(hissGain).connect(bus);
     hiss.start();
     loadSfx();
 }
@@ -1569,7 +1575,7 @@ function blip(f, dur, type, vol, to) {
     if (to) o.frequency.exponentialRampToValueAtTime(to, ac.currentTime + dur);
     g.gain.setValueAtTime(vol, ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
-    o.connect(g).connect(ac.destination);
+    o.connect(g).connect(bus);
     o.start(); o.stop(ac.currentTime + dur + 0.01);
 }
 
@@ -2592,6 +2598,38 @@ window.naotmash = {
         kills++; cntEpic++;
         kill(best, 0, -140, true, true);
         return this;
+    },
+    /**
+     * Отладочный пульт. Форма общая с другими нашими играми: сыграть звук по
+     * имени, спросить уровень на общем узле, переключить тишину, спросить
+     * состояние. Мерить надо именно на общем узле живой страницы: офлайновый
+     * расчёт отвечает «ноты правильные», а не «человек это слышит».
+     */
+    sfx(name, vol) {
+        const names = Object.keys(SFX);
+        if (name === undefined) return names;
+        audioOn();
+        if (!ac) return { ошибка: 'звук не заведён: нужен настоящий тап или ?тихо снят' };
+        if (!names.includes(name)) return { ошибка: 'нет такого: ' + names.join(', ') };
+        const до = this.level();
+        if (!play(name, vol === undefined ? 0.6 : vol, 1)) blip(440, 0.2, 'square', 0.15);
+        return { имя: name, доТишина: до };
+    },
+    /** Действующее значение на общем узле. В тишине обязано быть ровно 0. */
+    level() {
+        if (!meter) return 0;
+        const buf = new Float32Array(meter.fftSize);
+        meter.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+        return +Math.sqrt(sum / buf.length).toFixed(5);
+    },
+    /** mute() — узнать, mute(true|false) — переключить. */
+    mute(v) {
+        if (v === undefined) return !S.sound || !ac;
+        S.sound = !v;
+        if (bus) bus.gain.value = v ? 0 : 1;
+        return !S.sound || !ac;
     },
     render() { draw(); return this; },
     state() {
