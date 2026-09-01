@@ -218,7 +218,7 @@ const PAD = 6;
 const WALL = 34;             // толщина стены, единиц мира
 const GATE_H = 150;          // высота проёма ворот
 const CLIMB = 4.2;           // сколько секунд враг лезет через стену
-const gate = { hp: 100, hp0: 100, hit: 0, over: 0 };
+const gate = { hp: 100, hp0: 100, hit: 0, over: 0, told: false };
 const gateTop = () => H / 2 - GATE_H / 2;
 const gateBot = () => H / 2 + GATE_H / 2;
 /**
@@ -404,7 +404,7 @@ function reset() {
     rock = { x: W / 2, y: H * 0.28, vx: 0, vy: 0, r: 19 };
     aim = { x: W / 2, y: H / 2, down: false };
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
-    gateLost = false; gate.hp = gate.hp0; gate.hit = 0; gate.over = 0;
+    gateLost = false; gate.hp = gate.hp0; gate.hit = 0; gate.over = 0; gate.told = false;
     marks = []; biomeShown = -1; biomeWas = -1; biomeFade = 1;
     trial = null; trials = 0; boons = []; taken = 0; barrels = []; blown = 0;
     gripped = null; hooked = null;
@@ -831,6 +831,12 @@ function combat(dt) {
 /** Ворота теряют здоровье видимо: трещинами и креном, а не числом. */
 function hurtGate(dmg, y) {
     if (gate.hp <= 0) return;
+    // Правило простое: подсказка приходит тогда, когда она нужна. Первый раз
+    // за партию — словами, дальше только трещинами: повторять надоедает.
+    if (!gate.told) {
+        gate.told = true;
+        nums.push({ x: WALL + 74, y: H / 2 - 30, v: 'ворота бьют!', t: 2.2, big: true });
+    }
     gate.hp = Math.max(0, gate.hp - dmg);
     gate.hit = 1;
     shake = Math.min(1, shake + dmg / 40);
@@ -1439,8 +1445,9 @@ function showStart() {
     // прежде чем поймёт правила. Механику первый же замах объясняет лучше
     // любого списка, поэтому список ушёл под спойлер вниз.
     el.innerHTML = '<h1>Наотмашь</h1>' +
-        '<p class="lead">Выбери железяку — и сразу в бой.<br>' +
-        '<span>Кнопки удара нет: бьёт скорость, а не касание.</span></p>' +
+        '<p class="lead">Слева ворота, за ними твой замок.<br>' +
+        '<span>Его берут, пока ты бегаешь. Кнопки удара нет: бьёт скорость, ' +
+        'а не касание.</span></p>' +
         (record ? '<p class="rec">рекорд ' + record + '</p>' : '') +
         WEAPONS.map((w, i) => '<button class="pick" data-w="' + i + '" aria-label="' + w[0] + '">' +
             '<span class="ic">' + (ICON[w[2].sprite] || '') + '</span>' +
