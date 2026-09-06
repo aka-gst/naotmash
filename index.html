@@ -2564,10 +2564,25 @@ window.naotmash = {
         hero.x = W / 2; hero.y = H * (o.hy || 0.60);
         aim.down = true;
         filmSpin = o.spin || 9; filmR = o.radius || 92;
-        for (let i = 0; i < 130; i++) {          // разгон вхолостую
+        /*
+         * ЦЕНТР ЗАМАХА ЖИВЁТ ОТДЕЛЬНО ОТ ГЕРОЯ. Прежде цель ставилась
+         * относительно героя (aim = hero + круг) — герой гнался за
+         * собственным центром и не мог сдвинуться ни на точку: жалоба
+         * Сергея «персонаж не ходит, когда бьёт» была про витрину, в
+         * живом бою связка «машешь и идёшь» есть (см. физику: рука за
+         * пределом вытянутой тянет героя). Теперь центр дрейфует, рука
+         * тянется за ним, герой идёт и бьёт — как под живым пальцем.
+         *
+         * drift: 'враг' (к ближайшему живому, по умолчанию) |
+         *        {x, y} (точек в секунду, по прямой) |
+         *        0 (стоять — прежнее поведение, отрицательный контроль).
+         */
+        filmC = { x: hero.x, y: hero.y };
+        filmDrift = o.drift === undefined ? 'враг' : o.drift;
+        for (let i = 0; i < 130; i++) {          // разгон вхолостую, на месте
             const t = i / 120;
-            aim.x = hero.x + Math.cos(t * filmSpin) * filmR;
-            aim.y = hero.y + Math.sin(t * filmSpin) * filmR;
+            aim.x = filmC.x + Math.cos(t * filmSpin) * filmR;
+            aim.y = filmC.y + Math.sin(t * filmSpin) * filmR;
             physStep(1 / 120);
         }
         // Жертву ставим ровно туда, куда сейчас летит кончик.
@@ -2583,13 +2598,35 @@ window.naotmash = {
         filmT = 130 / 120;
         return this;
     },
-    /** Прокрутить сцену на dt секунд, продолжая замах. */
-    step(dt) {
+    /** Прокрутить сцену на dt секунд, продолжая замах. Вторым аргументом
+     *  можно прямо поставить центр замаха: step(dt, {центр: {x, y}}). */
+    step(dt, o) {
+        if (o && o.центр) { filmC.x = o.центр.x; filmC.y = o.центр.y; }
         const n = Math.max(1, Math.round((dt || 1 / 60) * 120));
         for (let i = 0; i < n; i++) {
+            // Центр дрейфует; рука тянет героя следом — он ходит и бьёт.
+            if (filmDrift === 'враг') {
+                let cel = null, bd = 1e9;
+                for (const e of foes) {
+                    if (e.dead) continue;
+                    const d = Math.hypot(e.x - filmC.x, e.y - filmC.y);
+                    if (d < bd) { bd = d; cel = e; }
+                }
+                if (cel && bd > 8) {
+                    const шаг = 110 / 120;   // точек в секунду / подшаги
+                    filmC.x += (cel.x - filmC.x) / bd * Math.min(шаг, bd);
+                    filmC.y += (cel.y - filmC.y) / bd * Math.min(шаг, bd);
+                }
+            } else if (filmDrift && filmDrift.x !== undefined) {
+                filmC.x += filmDrift.x / 120;
+                filmC.y += filmDrift.y / 120;
+            }
+            // Центр не уводит сцену за край поля.
+            filmC.x = Math.max(40, Math.min(W - 40, filmC.x));
+            filmC.y = Math.max(60, Math.min(H - 40, filmC.y));
             filmT += 1 / 120;
-            aim.x = hero.x + Math.cos(filmT * filmSpin) * filmR;
-            aim.y = hero.y + Math.sin(filmT * filmSpin) * filmR;
+            aim.x = filmC.x + Math.cos(filmT * filmSpin) * filmR;
+            aim.y = filmC.y + Math.sin(filmT * filmSpin) * filmR;
             physStep(1 / 120);
         }
         return this;
@@ -2646,6 +2683,10 @@ window.naotmash = {
     render() { draw(); return this; },
     state() {
         return { врагов: foes.length, ошмётков: bits.length, отрывов: cntEpic,
+            /* «Ходит» меряется длиной пути, а не впечатлением — приёмка
+               витринной сцены требует путь за петлю, и без этих координат
+               его нечем считать. */
+            герой: { x: Math.round(hero.x), y: Math.round(hero.y) },
             задник: +biomeFade.toFixed(2), заходят: foes.filter((e) => e.entering).length,
             ворота: Math.round(gate.hp), перелезло: gate.over,
             скорость: Math.round(Math.hypot(...vel(pts[pts.length - 1]))),
@@ -2653,6 +2694,7 @@ window.naotmash = {
     },
 };
 let filmT = 0, filmSpin = 9, filmR = 92;
+let filmC = { x: 0, y: 0 }, filmDrift = 'враг';
 
 /*
  * Проверка прохождения: worm.html?flow прогоняет партию целиком — стартовое
