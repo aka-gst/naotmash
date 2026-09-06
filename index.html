@@ -2590,10 +2590,15 @@ window.naotmash = {
         const [vx, vy] = vel(tip);
         const d = Math.hypot(vx, vy) || 1;
         const crowd = o.crowd === undefined ? 3 : o.crowd;   // ноль это ноль, а не «не задано»
+        // spread — шаг между врагами вдоль вектора кончика. С плотным шагом
+        // (26) вся толпа стоит в радиусе цепа и умирает раньше, чем герою
+        // есть куда идти: приёмка Тестера намерила путь 23–38 в настоящих
+        // окнах. Растянутая цепочка врагов даёт сцене дорогу.
+        const spread = o.spread || 26;
         for (let i = 0; i < crowd; i++) {
             spawnAt(o.kind || 'ходок',
-                tip.x + vx / d * (34 + i * 26) + (i % 2 ? 22 : -22),
-                tip.y + vy / d * (34 + i * 26) + (o.dy || 0));
+                tip.x + vx / d * (34 + i * spread) + (i % 2 ? 22 : -22),
+                tip.y + vy / d * (34 + i * spread) + (o.dy || 0));
         }
         filmT = 130 / 120;
         return this;
@@ -2604,18 +2609,29 @@ window.naotmash = {
         if (o && o.центр) { filmC.x = o.центр.x; filmC.y = o.центр.y; }
         const n = Math.max(1, Math.round((dt || 1 / 60) * 120));
         for (let i = 0; i < n; i++) {
-            // Центр дрейфует; рука тянет героя следом — он ходит и бьёт.
+            // Центр — «поводок»: держится на выносе ВПЕРЕДИ ГЕРОЯ в сторону
+            // самого дальнего живого, как палец живого игрока, уведённый в
+            // край экрана. Дрейф с собственной скоростью не работал: центр
+            // уходил от героя на 130 точек, а тяга руки давала герою лишь
+            // 33 — рука полкруга проводит ближе вытянутой и не тянет.
+            // Дальний живой, а не ближний: ближнего цеп достаёт без ходьбы,
+            // и с ближним прицелом герой стоял (путь 9–28 за петлю).
             if (filmDrift === 'враг') {
-                let cel = null, bd = 1e9;
+                let cel = null, bd = -1;
                 for (const e of foes) {
                     if (e.dead) continue;
-                    const d = Math.hypot(e.x - filmC.x, e.y - filmC.y);
-                    if (d < bd) { bd = d; cel = e; }
+                    const d = Math.hypot(e.x - hero.x, e.y - hero.y);
+                    if (d > bd) { bd = d; cel = e; }
                 }
                 if (cel && bd > 8) {
-                    const шаг = 110 / 120;   // точек в секунду / подшаги
-                    filmC.x += (cel.x - filmC.x) / bd * Math.min(шаг, bd);
-                    filmC.y += (cel.y - filmC.y) / bd * Math.min(шаг, bd);
+                    const vynos = Math.min(150, bd);
+                    const zhX = hero.x + (cel.x - hero.x) / bd * vynos;
+                    const zhY = hero.y + (cel.y - hero.y) / bd * vynos;
+                    // Поводок не телепортируется, а догоняет — иначе рывок.
+                    const g = Math.hypot(zhX - filmC.x, zhY - filmC.y) || 1;
+                    const шаг = Math.min(420 / 120, g);
+                    filmC.x += (zhX - filmC.x) / g * шаг;
+                    filmC.y += (zhY - filmC.y) / g * шаг;
                 }
             } else if (filmDrift && filmDrift.x !== undefined) {
                 filmC.x += filmDrift.x / 120;
@@ -2687,6 +2703,12 @@ window.naotmash = {
                витринной сцены требует путь за петлю, и без этих координат
                его нечем считать. */
             герой: { x: Math.round(hero.x), y: Math.round(hero.y) },
+            /* Рядом с числом обязано стоять, где мерили: в скрытой панели
+               окно 0×0, геометрия сцены нулевая, и путь героя там врёт
+               всемеро (замер Тестера: 264 против 23–38 в настоящих окнах).
+               Замер при окно.w = 0 не значит ничего. */
+            окно: { w: window.innerWidth, h: window.innerHeight },
+            центр: { x: Math.round(filmC.x), y: Math.round(filmC.y) },
             задник: +biomeFade.toFixed(2), заходят: foes.filter((e) => e.entering).length,
             ворота: Math.round(gate.hp), перелезло: gate.over,
             скорость: Math.round(Math.hypot(...vel(pts[pts.length - 1]))),
@@ -2790,8 +2812,13 @@ const loopN = ADDR.loop;
 if (loopN >= 1 && loopN <= 3) {
     const N = window.naotmash;
     const setup = () => {
-        N.scene(loopN === 1 ? { weapon: 0, crowd: 5, seed: 31, hy: 0.44, radius: 84 }
-            : loopN === 2 ? { weapon: 3, crowd: 2, seed: 12, hy: 0.44, radius: 84 }
+        // Петля 1 — «машет и идёт»: растянутая толпа даёт герою дорогу
+        // (путь за петлю 133 точки при пороге 120, ошмётков 77 — идёт И
+        // бьёт; замерено в окне 375×812, в скрытой панели мера врёт).
+        // Петля 2 — точный удар дугой: ей ходьба вредит (с дрейфом герой
+        // убегал от показа, путь 383 при 2 ошмётках), стоит на месте явно.
+        N.scene(loopN === 1 ? { weapon: 0, crowd: 10, spread: 42, seed: 31, hy: 0.5, radius: 84 }
+            : loopN === 2 ? { weapon: 3, crowd: 2, seed: 12, hy: 0.44, radius: 84, drift: 0 }
             : { weapon: 0, crowd: 6, seed: 31, hy: 0.42, radius: 84 });
         return 0;
     };
