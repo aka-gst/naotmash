@@ -2550,13 +2550,20 @@ window.naotmash = {
     scene(opts) {
         const o = opts || {};
         filming = true;
-        srand(o.seed || 20260830);
         const w = { ...WEAPONS[o.weapon || 0][2] };
         w.len0 = w.len;
         Object.assign(S, w); Object.assign(BASE, w);
         resize();
         if (!W || !H) { W = 450; H = 900; sc = 1; ctx.setTransform(1, 0, 0, 1, 0, 0); }
         reset();
+        /*
+         * Сид — ПОСЛЕ reset(), а не до: reset в конце пересеивает генератор
+         * случайным числом (srand(Math.random()…)), и сид, поставленный
+         * раньше, не доживал до постановки. Снаружи это выглядело как
+         * недетерминизм сцены: первый прогон 213 пути, повтор 138 — повадки
+         * врагов шли по случайному сиду, и «тот же seed» ничего не держал.
+         */
+        srand(o.seed || 20260830);
         started = true; paused = false; menu = false; trial = null;
         $('start').classList.remove('on');
         $('over').classList.remove('on');
@@ -2624,7 +2631,10 @@ window.naotmash = {
                     if (d > bd) { bd = d; cel = e; }
                 }
                 if (cel && bd > 8) {
-                    const vynos = Math.min(150, bd);
+                    /* 190, не 150: со 150 путь на 768×1024 падал до 108 у
+                       второй руки (порог 120) — окно меняет геометрию поля,
+                       и запас поводка обязан переживать все окна. */
+                    const vynos = Math.min(190, bd);
                     const zhX = hero.x + (cel.x - hero.x) / bd * vynos;
                     const zhY = hero.y + (cel.y - hero.y) / bd * vynos;
                     // Поводок не телепортируется, а догоняет — иначе рывок.
