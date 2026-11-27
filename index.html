@@ -242,6 +242,9 @@ function pickWallSpot() {
     const above = rWave() < 0.5;
     return above ? rWave(40, gateTop() - 20) : rWave(gateBot() + 20, H - 40);
 }
+/** Сила укуса ворот по волнам: 0.25 на первой, +0.15 за волну, с шестой — полная.
+ *  На полной силе пятеро ходоков сгрызали ворота за 5 с — на 17-й секунде партии. */
+const gateK = () => Math.min(1, 0.25 + 0.15 * (wave - 1));
 const gateAim = (e) => ({ x: WALL + 16, y: e && e.wallY !== undefined ? e.wallY : H / 2 });
 /**
  * Короткая сторона экрана — это всегда 450 единиц мира. Иначе на узком
@@ -438,7 +441,7 @@ function reset() {
         const y = H / 2 + 24 + i * S.seg;
         pts.push({ x: W / 2, y, px: W / 2, py: y });
     }
-    foes = []; orbs = []; nums = []; trail = []; bits = []; boons = [];
+    foes = []; orbs = []; nums = []; trail = []; bits = []; boons = []; uron = [];
     rock = { x: W / 2, y: H * 0.28, vx: 0, vy: 0, r: 19 };
     aim = { x: W / 2, y: H / 2, down: false };
     best = 0; shake = 0; dead = 0; wave = 0; score = 0; kills = 0; thrown = 0; grabs = 0;
@@ -507,6 +510,17 @@ const grown = () => Math.max(0, pts.length - S.len0);
 
 let tSec = 0;                        // секунды партии по физике, не по часам
 let god = false;                     // бессмертие для проверки расписания (пульт)
+let uron = [];                       // журнал потерянных сердец: чем, когда и в какой обстановке (пульт)
+function uronNote(src, e) {
+    const tip = pts[pts.length - 1], ex = e ? e.x : hero.x, ey = e ? e.y : hero.y;
+    const near = (r) => foes.filter((o) => !o.dead && Math.hypot(o.x - hero.x, o.y - hero.y) < r).length;
+    uron.push({ сек: +tSec.toFixed(1), волна: wave, чем: src, осталось: hero.hp,
+        рядом96: near(96), рядом200: near(200), всего: foes.length,
+        // сзади — враг со стороны, противоположной вытянутой руке
+        сзади: (ex - hero.x) * hero.fx + (ey - hero.y) * hero.fy < 0,
+        доОружия: Math.round(Math.hypot(tip.x - ex, tip.y - ey)),
+        скоростьКонца: Math.round(Math.hypot(...vel(tip))) });
+}
 function step(dt) {
     tSec += dt;
     if (god) hero.hp = hero.hpMax;
@@ -978,7 +992,7 @@ function kill(e, kx = 0, ky = 0, sure = false, epic = false) {
             hurt(o, 26 * f, (o.x - e.x) / (d || 1) * 700 * f, (o.y - e.y) / (d || 1) * 700 * f);
         }
         if (Math.hypot(hero.x - e.x, hero.y - e.y) < 46 && hero.iframe <= 0 && !dead) {
-            hero.iframe = 0.9; hero.hp -= 1;
+            hero.iframe = 0.9; hero.hp -= 1; uronNote('иглы', e);
             if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
         }
         for (let k = 0; k < 12; k++) {
@@ -1319,7 +1333,7 @@ function moveFoes(dt) {
                 e.gnaw = (e.gnaw || 0) + dt;
                 if (e.gnaw > 0.6) {
                     e.gnaw = 0;
-                    hurtGate(2.6 * e.mass, e.y);
+                    hurtGate(2.6 * e.mass * gateK(), e.y);
                 }
                 e.climb = 0;
             } else if (уСтены) {
@@ -1328,7 +1342,7 @@ function moveFoes(dt) {
                 e.climb = (e.climb || 0) + dt;
                 if (e.climb >= CLIMB) {
                     e.climb = 0;
-                    hurtGate(9, e.y);
+                    hurtGate(9 * gateK(), e.y);
                     gate.over++;
                     for (let k = 0; k < 8; k++) {
                         bits.push({ x: e.x, y: e.y, vx: rFx(-160, 60), vy: rFx(-160, 160),
@@ -1351,7 +1365,10 @@ function moveFoes(dt) {
         e.touch -= dt;
         // Между досягаемостью тела и дугой оружия был зазор в десяток единиц,
         // и висящего в нём врага не брало ничто: ни удар, ни толчок.
-        if (d < e.r + HERO_R + 14 && e.touch <= 0 && hero.iframe <= 0 && !dead) {
+        // Меряем до ГЕРОЯ (hd), а не до цели шага (d): у идущего к воротам цель —
+        // точка у стены, и дошедший до неё «касался» героя через всё поле. Так
+        // новичок терял сердца, пока рядом никого не было (7153fe6, 1 сентября).
+        if (hd < e.r + HERO_R + 14 && e.touch <= 0 && hero.iframe <= 0 && !dead) {
             // Оружие висит на вытянутой руке и метёт дугу снаружи, поэтому
             // прижавшегося вплотную нечем достать. Значит, столкновение с
             // героем должно отбрасывать врага на длину оружия, а не на шаг:
@@ -1361,12 +1378,13 @@ function moveFoes(dt) {
             // Толчок делится на массу, как и удар: иначе тушу отбрасывает так
             // же далеко, как бегуна, и она уходит из досягаемости навсегда.
             const shove = 1400 / e.mass;
-            for (const q of e.p) push(q, -dx / d * shove, -dy / d * shove);
+            for (const q of e.p) push(q, -hx / hd * shove, -hy / hd * shove);
             // Оружие не достаёт вплотную, поэтому налетевший получает от самого
             // героя. Даром это не даётся: за размен платят сердцем, так что
             // толкаться специально невыгодно — но приклеиться уже нельзя.
-            if (!e.boss) hurt(e, 14, -dx / d * 120, -dy / d * 120);
+            if (!e.boss) hurt(e, 14, -hx / hd * 120, -hy / hd * 120);
             hero.hp -= 1; shake = 1;
+            uronNote(e.kind, e);
             blip(95, 0.28, 'sawtooth', 0.2, 45); buzz(80);
             if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
         }
@@ -1834,6 +1852,7 @@ function blowBarrel(b) {
     }
     if (Math.hypot(hero.x - b.x, hero.y - b.y) < 70 && hero.iframe <= 0 && !dead) {
         hero.iframe = 0.9; hero.hp -= 1;      // рядом с бочкой стоять нельзя
+        uronNote('бочка');
         if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
     }
 }
@@ -2887,8 +2906,11 @@ window.naotmash = {
      *  реквизит, дроп. Одинаков у всех с одним сидом — это и проверяется. */
     otpechatok() { return fp.slice(); },
     bessmertie(v) { god = v !== false; return god; },
+    /** Журнал потерянных сердец текущей партии. */
+    uron() { return uron.slice(); },
     /** Синхронный прогон бота по забегу дня (сид — ?seed=): для проверки
-     *  расписания. bot: 'стоит' (круг на месте) | 'машет' (круг с ходьбой);
+     *  расписания. bot: 'стоит' (круг на месте) | 'машет' (круг с ходьбой) |
+     *  'страж' (круг перед воротами);
      *  stop — волн и дропов, после которых хватит; по умолчанию бессмертие. */
     partiya(o) {
         o = o || {};
@@ -2901,7 +2923,9 @@ window.naotmash = {
         const maxK = 120 * (o.sek || 900);
         while (k < maxK && dead <= 0 && !gateLost) {
             const t = k++ / 120;
-            const cx = o.bot === 'машет' ? W / 2 + 150 * Math.sin(t * 0.7) : W / 2;
+            // 'страж' — тот же круг, что у «стоит», но перед воротами: игрок, который
+            // прочёл первую строку стартового окна. Центр поля ворота не защищает.
+            const cx = o.bot === 'машет' ? W / 2 + 150 * Math.sin(t * 0.7) : o.bot === 'страж' ? WALL + 130 : W / 2;
             const cy = o.bot === 'машет' ? H / 2 + 100 * Math.cos(t * 0.5) : H / 2;
             const rr = o.bot === 'машет' ? 90 : 120, sp = o.bot === 'машет' ? 11 : 7;
             aim.x = cx + Math.cos(t * sp) * rr; aim.y = cy + Math.sin(t * sp) * rr;
@@ -2910,7 +2934,7 @@ window.naotmash = {
             if (wave >= stopW && fp.filter((x) => x.startsWith('дроп')).length >= stopD) break;
         }
         const r = { сек: Math.round(tSec), волна: wave, дропов: fp.filter((x) => x.startsWith('дроп')).length,
-            убито: kills, умер: dead > 0, ворота: gateLost, отпечаток: fp.slice() };
+            убито: kills, умер: dead > 0 && !gateLost, ворота: gateLost, воротаHP: Math.round(gate.hp), оружие: WEAPONS[lastWeapon][0], урон: uron.slice(), отпечаток: fp.slice() };
         god = false;
         return r;
     },

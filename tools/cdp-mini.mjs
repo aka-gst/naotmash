@@ -2,7 +2,7 @@
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const PORT = 9435;
+const PORT = +(process.env.NAO_PORT || 9435);
 const PROFILE = process.env.NAO_PROFILE || process.env.HOME + '/dev/trash/naotmash-zabeg/profile';   // свой профиль, не Сергея
 export async function launch() {
   mkdirSync(PROFILE, { recursive: true });
