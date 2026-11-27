@@ -96,6 +96,16 @@
   #over ul { margin: 2px 0 14px; padding: 0 0 0 18px; max-width: 340px; color: #9fb0c2; font-size: 14px; line-height: 1.8; }
   #over ul b { font-size: inherit; color: #fff; }
   #over h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+  #start .den { position: relative; background: #2f6b4a; border-color: #3d8a60; padding: 15px 14px;
+                box-shadow: 0 1px 0 #0b1119, inset 0 1px 0 #ffffff1f; }
+  #start .den b { font-size: 17px; }
+  #start .den span { color: #cfe9d8; }
+  #start .den .arw { margin-left: auto; padding-left: 6px; font-size: 22px; line-height: 1; color: #eafff0; }
+  #start .den:hover, #start .den:focus-visible { background: #38805a; border-color: #7fd8a4; }
+  #start .den:active { background: #3d8a60; }
+  #start .free { margin: 8px 0 0; font-size: 12.5px; color: #7c8b9c; letter-spacing: .06em; text-transform: lowercase; }
+  #over .tag { margin: 0 0 8px; font-size: 13.5px; color: #cfae55; }
+  #over button.again { background: #2f6b4a; border-color: #3d8a60; }
   #go { align-items: center !important; font-size: 16px; font-weight: 600; color: #eafff0;
         background: #2f6b4a; border-color: #3d8a60; padding: 13px !important; }
 
@@ -133,7 +143,7 @@
 <a class="game-home-menu" href="/" aria-label="Вернуться на главную aka-gst.ru">⌂ НА ГЛАВНУЮ</a>
 
 <div id="hud">
-  <div><span class="dim">волна</span> <b id="wv">1</b> <span class="dim" id="th"></span> <span class="dim">· счёт</span> <b id="sc">0</b></div>
+  <div><span class="dim">волна</span> <b id="wv">1</b> <span class="dim" id="dn"></span> <span class="dim" id="th"></span> <span class="dim">· счёт</span> <b id="sc">0</b></div>
   <div id="gauges">
     <div><span class="dim">оружие</span> <b id="sp">0</b> <span class="dim">px/с</span></div>
     <div id="speedbar"><div id="speedfill"></div></div>
@@ -228,9 +238,9 @@ const gateBot = () => H / 2 + GATE_H / 2;
  * отойдя. Выбор появляется только тогда, когда есть кого пропустить.
  */
 function pickWallSpot() {
-    if (Math.random() < 0.64) return H / 2;
-    const above = Math.random() < 0.5;
-    return above ? rnd(40, gateTop() - 20) : rnd(gateBot() + 20, H - 40);
+    if (rWave() < 0.64) return H / 2;
+    const above = rWave() < 0.5;
+    return above ? rWave(40, gateTop() - 20) : rWave(gateBot() + 20, H - 40);
 }
 const gateAim = (e) => ({ x: WALL + 16, y: e && e.wallY !== undefined ? e.wallY : H / 2 });
 /**
@@ -371,23 +381,51 @@ let boons = [], taken = 0;   // усиления и оружие, падающи
 let barrels = [], blown = 0;   // бочки: бьются от удара и от брошенного тела
 const METER = 20;   // единиц мира в метре: викинг ростом чуть больше метра
 let armX = 0, armY = 1;   // куда смотрит древко у жёсткого оружия   // как быстро едет петля
-let theme = null, bossDone = false;
+let theme = null, bossDone = false, spawnN = 0;
 let marks = [];                     // где сейчас заходят враги
 let biomeShown = -1, biomeWas = -1, biomeFade = 1;   // задник меняется переходом
 let segNow = 11;   // рабочая длина звена: под напряжением цепь подбирается
 let wave = 0, spawnLeft = 0, paused = false;
 
 /**
- * Свой генератор — чтобы забег можно было повторить по номеру, если
- * когда-нибудь понадобится. Сид берётся случайный: каждый бой свой.
+ * Четыре независимых потока (mulberry32). Расписание забега — исход — идёт
+ * из своих потоков, а косметика (ошмётки, пятна, тряска) из своего: тряска
+ * зависит от частоты кадров, и на общем потоке «тот же сид» расходился бы на
+ * первом же кадре.
+ *   rWave — тема, вид, край и точка входа, место у стены (по номеру волны);
+ *   rProp — бочки, ящики, столбы, ямы (по номеру волны);
+ *   rDrop — что именно лежит в дропе (по номеру дропа);
+ *   rFx   — только косметика, сеется случайным.
+ * Каждая функция даёт rX(a, b) — число в [a, b).
  */
-let seed = 1;
-const srand = (n) => { seed = (n >>> 0) || 1; };
-const rnd = (a, b) => {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    return a + (seed / 4294967296) * (b - a);
+let seed = 1;                       // сид забега; вся партия — функция от него
+const stream = (s) => {
+    let a = s >>> 0;
+    return (lo = 0, hi = 1) => {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return lo + (((t ^ (t >>> 14)) >>> 0) / 4294967296) * (hi - lo);
+    };
 };
+const hash = (...xs) => {
+    let h = 2166136261;
+    for (const x of xs) { h = Math.imul(h ^ (x | 0), 16777619); h ^= h >>> 13; }
+    return h >>> 0;
+};
+// Косметике — прежний LCG: витринные петли приняты по числам, а их ошмётки и
+// жребий трофея шли именно по нему; смена генератора сдвинула путь героя.
+const lcg = (s) => {
+    let a = (s >>> 0) || 1;
+    return (lo = 0, hi = 1) => { a = (a * 1664525 + 1013904223) >>> 0; return lo + (a / 4294967296) * (hi - lo); };
+};
+let rWave = stream(1), rProp = stream(2), rDrop = stream(3), rFx = lcg(4);
+let dropN = 0;                      // номер дропа с убийства; дроп за волну нумеруется волной
+const srand = (n) => { seed = (n >>> 0) || 1; rFx = lcg(seed); };
 
+/** Журнал расписания — для проверки «тот же сид, то же расписание». */
+let fp = [];
+const note = (s) => { fp.push(s); };
 
 function reset() {
     Object.assign(S, BASE);          // прокачка прошлого забега не переносится
@@ -409,7 +447,9 @@ function reset() {
     trial = null; trials = 0; boons = []; taken = 0; barrels = []; blown = 0;
     gripped = null; hooked = null;
     cntOver = 0; cntGrip = 0; cntBoom = 0; cntEpic = 0; cntFade = 0; cntIn = 0; inCorner = 0; bodySamples = 0;
-    srand(Math.floor(Math.random() * 2147483647));
+    seed = mode === 'den' ? denSeed : Math.floor(Math.random() * 2147483646) + 1;   // забег дня: сид дня
+    rFx = lcg(Math.floor(Math.random() * 4294967296));
+    dropN = 0; fp = []; spawnN = 0; theme = null;   // тема прошлого забега не влияет на первую волну
     startWave();
 }
 
@@ -465,7 +505,11 @@ const driver = () => (S.mode === 'tip' ? pts.length - 1 : 0);
 /** На сколько звеньев оружие переросло своё начальное состояние. */
 const grown = () => Math.max(0, pts.length - S.len0);
 
+let tSec = 0;                        // секунды партии по физике, не по часам
+let god = false;                     // бессмертие для проверки расписания (пульт)
 function step(dt) {
+    tSec += dt;
+    if (god) hero.hp = hero.hpMax;
     // Палец держит ровно одно звено. Всё остальное — следствие.
     const d0 = driver();
     const h = pts[d0];
@@ -715,8 +759,8 @@ function combat(dt) {
                 blip(300, 0.2, 'square', 0.14, 90);
                 const t = pts[pts.length - 1];
                 for (let q = 0; q < 6; q++) {
-                    bits.push({ x: t.x, y: t.y, vx: rnd(-260, 260), vy: rnd(-260, 260),
-                        r: rnd(2, 4), ang: rnd(0, 6.283), spin: rnd(-16, 16), t: 0.8, boss: held.boss });
+                    bits.push({ x: t.x, y: t.y, vx: rFx(-260, 260), vy: rFx(-260, 260),
+                        r: rFx(2, 4), ang: rFx(0, 6.283), spin: rFx(-16, 16), t: 0.8, boss: held.boss });
                 }
                 held = null;
             }
@@ -840,11 +884,11 @@ function hurtGate(dmg, y) {
     gate.hp = Math.max(0, gate.hp - dmg);
     gate.hit = 1;
     shake = Math.min(1, shake + dmg / 40);
-    blip(90 + rnd(0, 30), 0.16, 'square', 0.13, 50);
+    blip(90 + rFx(0, 30), 0.16, 'square', 0.13, 50);
     for (let k = 0; k < 3; k++) {
-        bits.push({ x: WALL + 6, y: (y || H / 2) + rnd(-14, 14),
-            vx: rnd(40, 220), vy: rnd(-140, 140),
-            r: rnd(1.6, 3.2), ang: 0, spin: rnd(-9, 9), t: 0.45, wet: '#5a4630' });
+        bits.push({ x: WALL + 6, y: (y || H / 2) + rFx(-14, 14),
+            vx: rFx(40, 220), vy: rFx(-140, 140),
+            r: rFx(1.6, 3.2), ang: 0, spin: rFx(-9, 9), t: 0.45, wet: '#5a4630' });
     }
     if (gate.hp <= 0) { dead = 1.4; gateLost = true; blip(60, 0.9, 'sawtooth', 0.26, 30); }
 }
@@ -864,7 +908,7 @@ function hurt(e, dmg, kx, ky, part) {
     if (hitCd <= 0 && play('лязг', Math.min(0.55, 0.14 + dmg / 130), 0.85 + Math.random() * 0.4)) {
         hitCd = 0.05;
     } else {
-        blip(210 + rnd(0, 70), 0.13, 'triangle', Math.min(0.3, 0.05 + dmg / 260), 60);
+        blip(210 + rFx(0, 70), 0.13, 'triangle', Math.min(0.3, 0.05 + dmg / 260), 60);
     }
     shake = Math.min(1, shake + dmg / 120);
     if (e.hp <= 0 && !e.dead) {
@@ -917,6 +961,8 @@ function flying(e, dt) {
 
 /** Импульс последнего удара уносит ошмётки: видно, откуда прилетело. */
 function kill(e, kx = 0, ky = 0, sure = false, epic = false) {
+    // Ошмётки и награда этого врага — из его собственного потока: порядок смертей у игроков разный, а орбы и трофей влияют на исход.
+    const rK = e.oid ? stream(e.oid) : rFx;
     e.dead = true;
     if (e === gripped) { gripped = null; }
     // Колючий разлетается иглами: убивать его выгодно посреди толпы.
@@ -936,15 +982,15 @@ function kill(e, kx = 0, ky = 0, sure = false, epic = false) {
             if (hero.hp <= 0) { dead = 1.4; blip(70, 0.7, 'sawtooth', 0.25, 35); }
         }
         for (let k = 0; k < 12; k++) {
-            const a = rnd(0, 6.283), sp2 = rnd(200, 480);
+            const a = rK(0, 6.283), sp2 = rK(200, 480);
             bits.push({ x: e.x, y: e.y, vx: Math.cos(a) * sp2, vy: Math.sin(a) * sp2,
-                r: rnd(2, 4), ang: a, spin: rnd(-14, 14), t: rnd(0.4, 0.9), boss: false });
+                r: rK(2, 4), ang: a, spin: rK(-14, 14), t: rK(0.4, 0.9), boss: false });
         }
     }
     stain(e.x, e.y, e.r * 1.4, e.dark, 0.5);
     blip(e.boss ? 180 : 640, e.boss ? 0.5 : 0.09, 'square', e.boss ? 0.22 : 0.07, e.boss ? 50 : 0);
     for (let k = 0; k < (e.boss ? 8 : 1); k++) {
-        orbs.push({ x: e.x + rnd(-22, 22), y: e.y + rnd(-22, 22) });
+        orbs.push({ x: e.x + rK(-22, 22), y: e.y + rK(-22, 22) });
     }
     const push = Math.min(700, Math.hypot(kx, ky) * 0.45);
     const dir = Math.atan2(ky, kx);
@@ -961,15 +1007,15 @@ function kill(e, kx = 0, ky = 0, sure = false, epic = false) {
         // девяносто одинаковых чёрточек ложатся ровным ковром по всему
         // экрану и читаются сором, а не веером из одного места.
         const far = epic && k % 3 === 0;
-        const a = epic ? rnd(0, 6.283) : dir + rnd(-0.9, 0.9);
-        const sp = epic ? (far ? rnd(760, 1600) : rnd(160, 560))
-            : rnd(220, 700) + push * 0.6;
+        const a = epic ? rK(0, 6.283) : dir + rK(-0.9, 0.9);
+        const sp = epic ? (far ? rK(760, 1600) : rK(160, 560))
+            : rK(220, 700) + push * 0.6;
         bits.push({
-            x: e.x + rnd(-4, 4), y: e.y + rnd(-4, 4),
+            x: e.x + rK(-4, 4), y: e.y + rK(-4, 4),
             vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-            r: epic ? (far ? rnd(1.5, 2.6) : rnd(2.4, 5.4)) : rnd(1.6, 3.4),
-            ang: a, spin: rnd(-6, 6),
-            t: epic ? rnd(0.5, 1.1) : rnd(0.25, 0.6),
+            r: epic ? (far ? rK(1.5, 2.6) : rK(2.4, 5.4)) : rK(1.6, 3.4),
+            ang: a, spin: rK(-6, 6),
+            t: epic ? rK(0.5, 1.1) : rK(0.25, 0.6),
             fr: epic ? (far ? 0.985 : 0.955) : 0.955,
             boss: e.boss, wet: e.dark,
         });
@@ -978,29 +1024,29 @@ function kill(e, kx = 0, ky = 0, sure = false, epic = false) {
         slow = Math.max(slow, 0.26);
         shake = 1;
         for (let k = 0; k < 10; k++) {         // и след остаётся широкий
-            const a = rnd(0, 6.283), d = rnd(20, 120);
-            stain(e.x + Math.cos(a) * d, e.y + Math.sin(a) * d, rnd(6, 16), e.dark, 0.4);
+            const a = rK(0, 6.283), d = rK(20, 120);
+            stain(e.x + Math.cos(a) * d, e.y + Math.sin(a) * d, rK(6, 16), e.dark, 0.4);
         }
     }
     // И пятно под самим телом — широкое, а не точка.
     for (let k = 0; k < 4; k++) {
-        stain(e.x + Math.cos(dir) * k * 9 + rnd(-7, 7),
-              e.y + Math.sin(dir) * k * 9 + rnd(-7, 7),
+        stain(e.x + Math.cos(dir) * k * 9 + rK(-7, 7),
+              e.y + Math.sin(dir) * k * 9 + rK(-7, 7),
               e.r * (1.5 - k * 0.2), e.dark, 0.5);
     }
 
     const n = epic ? 20 : (e.boss ? 18 : 12);
     for (let k = 0; k < n; k++) {
-        const a = k ? rnd(0, 6.283) : dir;                 // первый кусок летит по удару
-        const sp = rnd(70, 300) + (k ? push * 0.5 : push);
+        const a = k ? rK(0, 6.283) : dir;                 // первый кусок летит по удару
+        const sp = rK(70, 300) + (k ? push * 0.5 : push);
         bits.push({
-            x: e.x + rnd(-5, 5), y: e.y + rnd(-5, 5),
+            x: e.x + rK(-5, 5), y: e.y + rK(-5, 5),
             vx: Math.cos(a) * sp + Math.cos(dir) * push * 0.4,
             vy: Math.sin(a) * sp + Math.sin(dir) * push * 0.4,
-            r: (k ? rnd(2, 5.5) : rnd(5.5, 8)) * (e.boss ? 1.7 : 1) * (epic ? 1.4 : 1),
-            ang: rnd(0, 6.283), spin: rnd(-16, 16),
-            t: k ? rnd(0.55, 1.2) : 9,          // крупный кусок лежит и ждёт
-            grab: !k && (sure || e.boss || rnd(0, 1) < 0.35), boss: e.boss,
+            r: (k ? rK(2, 5.5) : rK(5.5, 8)) * (e.boss ? 1.7 : 1) * (epic ? 1.4 : 1),
+            ang: rK(0, 6.283), spin: rK(-16, 16),
+            t: k ? rK(0.55, 1.2) : 9,          // крупный кусок лежит и ждёт
+            grab: !k && (sure || e.boss || (e.tr === undefined ? rK() : e.tr) < 0.35), boss: e.boss,
         });
     }
 }
@@ -1026,8 +1072,11 @@ function shrink(n) {
 
 function startWave() {
     wave++;
+    rWave = stream(hash(seed, wave, 1)); rProp = stream(hash(seed, wave, 2));
+    spawnN = 0;
     const bossWave = wave % 5 === 0;
     theme = pickTheme(wave, theme && theme[0]);
+    note('волна ' + wave + ':' + theme[0]);
     bossDone = false;
     // На волне босса тоже приходит толпа — иначе туша остаётся один на один
     // с оружием и волна выходит легче обычной.
@@ -1098,12 +1147,12 @@ function pickTheme(w, avoid) {
     if (debut) return debut;
     const ok = THEMES.filter(([name, t]) =>
         (!t.needs || w >= UNLOCK[t.needs]) && name !== avoid);
-    return ok.length ? ok[Math.floor(rnd(0, ok.length))] : THEMES[0];
+    return ok.length ? ok[Math.floor(rWave(0, ok.length))] : THEMES[0];
 }
 
 function pickKind(w, mix) {
     const list = Object.entries(mix).filter(([k]) => w >= UNLOCK[k]);
-    let t = rnd(0, list.reduce((a, x) => a + x[1], 0));
+    let t = rWave(0, list.reduce((a, x) => a + x[1], 0));
     for (const [key, weight] of list) if ((t -= weight) <= 0) return key;
     return 'ходок';
 }
@@ -1150,10 +1199,11 @@ function spawn() {
     // видно, откуда идут, и есть секунда развернуться.
     // Слева стена — оттуда никто не приходит. Враги идут снаружи замка:
     // справа, сверху и снизу.
-    const edge = Math.floor(rnd(0, 3));
+    const edge = Math.floor(rWave(0, 3));
+    const tr = rWave();                          // жребий трофея этого врага, заранее
     const out = 42;
-    const x = edge === 0 ? W + out : rnd(WALL + 40, W - 30);
-    const y = edge === 1 ? -out : edge === 2 ? H + out : rnd(30, H - 30);
+    const x = edge === 0 ? W + out : rWave(WALL + 40, W - 30);
+    const y = edge === 1 ? -out : edge === 2 ? H + out : rWave(30, H - 30);
     // Метка на кромке: показывает место входа, пока сам он ещё за экраном.
     marks.push({
         x: Math.max(10, Math.min(W - 10, x)),
@@ -1166,8 +1216,9 @@ function spawn() {
     const kind = boss ? ((wave / 5) % 2 === 0 ? 'червь' : 'туша') : pickKind(wave, theme[1].mix);
     const k = KINDS[kind];
     const hp = Math.round(k.hp * (boss ? 1 + wave * 0.9 : 1 + wave * 0.16));
+    note('враг ' + wave + '.' + (++spawnN) + ':' + kind + ':' + ['право', 'верх', 'низ'][edge]);
     foes.push({
-        x, y, kind, boss, hp, hp0: hp,
+        tr, oid: hash(seed, wave, spawnN, 5), x, y, kind, boss, hp, hp0: hp,
         r: k.r, link: k.link, walk: k.walk, damp: k.damp, mass: k.mass, armor: k.armor,
         color: k.color, dark: k.dark,
         iframe: 0, flash: 0, squeeze: 0, touch: 0,
@@ -1191,7 +1242,7 @@ function moveFoes(dt) {
         // Волна не «зачищается»: следующая начинается, пока предыдущая ещё
         // догорает. В референсе давление не спадает ни на секунду, а у нас
         // между волнами был провал — именно он и читался как «не нарастает».
-        dropBoon(hero.x, hero.y - 40, wave % 3 === 0 ? 'оружие' : 'усиление');
+        dropBoon(hero.x, hero.y - 40, wave % 3 === 0 ? 'оружие' : 'усиление', true);
         score += 40 * wave;
         startWave();
     }
@@ -1273,8 +1324,8 @@ function moveFoes(dt) {
                     hurtGate(9, e.y);
                     gate.over++;
                     for (let k = 0; k < 8; k++) {
-                        bits.push({ x: e.x, y: e.y, vx: rnd(-160, 60), vy: rnd(-160, 160),
-                            r: rnd(2, 4), ang: 0, spin: rnd(-8, 8), t: 0.5, wet: e.dark });
+                        bits.push({ x: e.x, y: e.y, vx: rFx(-160, 60), vy: rFx(-160, 160),
+                            r: rFx(2, 4), ang: 0, spin: rFx(-8, 8), t: 0.5, wet: e.dark });
                     }
                     e.dead = true;      // перелез: он уже внутри, его не достать
                 }
@@ -1417,8 +1468,28 @@ const RULES = '<details><summary>как это работает</summary><ul>' +
     '<li>Ползуна достаёт только кончик, щитоносец ловит оружие — вырывайся рывком, колючий взрывается от смерти.</li>' +
     '</ul></details>';
 
+function showResultDen() {
+    const tries = denSave(score);
+    const n = tries.length, best = Math.max(...tries);
+    const today = denSeed === dayOf(Date.now());
+    const tag = !today ? 'забег того дня' : n === 1 ? 'в зачёт' : 'тренировка';
+    puls('zabeg-konec', { den: denSeed, popytka: n, schyot: score, volna: wave, ubito: kills, sek: Math.round(tSec) });
+    $('over').innerHTML = '<h1>' + (gateLost ? 'Ворота пали' : 'Викинг пал') + '</h1>' +
+        '<p class="tag">забег ' + denShort() + ' · попытка ' + n + ' · ' + tag + '</p>' +
+        '<ul>' +
+        '<li>счёт <b>' + score + '</b></li>' +
+        '<li>дошёл до волны <b>' + wave + '</b>, убил <b>' + kills + '</b></li>' +
+        '<li>попытка <b>' + n + '</b> сегодня, лучшая <b>' + best + '</b></li>' +
+        '</ul>' +
+        '<button class="again" data-act="again" aria-label="Ещё раз"><b>Ещё раз</b><span>тот же забег, сразу</span></button>' +
+        '<button data-act="share" aria-label="Показать друзьям"><b>Показать друзьям</b><span>ссылка на этот же забег</span></button>' +
+        '<button data-act="menu" aria-label="К выбору"><b>К выбору</b><span>забег дня или свободная игра</span></button>';
+    $('over').classList.add('on');
+}
+
 function showResult() {
     started = false;
+    if (mode === 'den') { showResultDen(); return; }
     const beaten = score > record;
     if (beaten) {
         record = score;
@@ -1440,6 +1511,7 @@ function showResult() {
 
 function showStart() {
     started = false;
+    denSeed = curDen();
     const el = $('start');
     // Первым идёт действие, а не справка: человек должен понять, что жать,
     // прежде чем поймёт правила. Механику первый же замах объясняет лучше
@@ -1448,6 +1520,12 @@ function showStart() {
         '<p class="lead">Слева ворота, за ними твой замок.<br>' +
         '<span>Его берут, пока ты бегаешь. Кнопки удара нет: бьёт скорость, ' +
         'а не касание.</span></p>' +
+        '<button class="den" data-den="1" aria-label="Забег дня">' +
+            '<span class="tx"><b>' + (ADDR.seed && ADDR.seed !== dayOf(Date.now()) ? 'Забег того дня' : 'Забег дня') +
+            ' · ' + denLong() + ' · попытка ' + (denTries().length + 1) + '</b>' +
+            '<span>на руке: ' + WEAPONS[denWeapon()][0] + ' · волны одни на всех</span></span>' +
+            '<span class="arw">›</span></button>' +
+        '<p class="free">свободная игра</p>' +
         (record ? '<p class="rec">рекорд ' + record + '</p>' : '') +
         WEAPONS.map((w, i) => '<button class="pick" data-w="' + i + '" aria-label="' + w[0] + '">' +
             '<span class="ic">' + (ICON[w[2].sprite] || '') + '</span>' +
@@ -1531,12 +1609,93 @@ function readAddress(raw) {
         // проверки был и зелёный исход: если ворота не удерживает и он,
         // оборона невыполнима, а невыполнимое человек считает поломкой.
         guard: /(^|[?&#])(страж|guard)(=|[&#]|$)/i.test(ask),
+        // ?seed=YYYYMMDD — забег того дня (ссылка от друга); кривая дата — как будто её нет
+        seed: (() => {
+            const m = ask.match(/(?:^|[?&#])seed=(\d{4})(\d{2})(\d{2})(?!\d)/);
+            if (!m || +m[2] < 1 || +m[2] > 12 || +m[3] < 1 || +m[3] > 31 || +m[1] < 2020) return 0;
+            return +(m[1] + m[2] + m[3]);
+        })(),
         loop: still ? 3 : parseInt((ask.match(/(?:петля|loop)=(\d+)/) || [])[1], 10),
     };
 }
 const ADDR = readAddress(location.search);
 const ASK = ADDR.ask;
 const QUIET = ADDR.quiet;
+
+/* ───────────────────────────── Забег дня ──────────────────────────────── */
+
+/**
+ * Сид дня — дата по Москве (UTC+3) числом YYYYMMDD. Расписание боя (темы,
+ * виды, края, реквизит, дропы) — функция этого числа; экран и руки меняют
+ * саму партию, но не порядок, в котором на игрока выходит мир.
+ */
+const dayOf = (ms) => {
+    const d = new Date(ms + 3 * 3600e3);
+    return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+};
+const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа',
+    'сентября', 'октября', 'ноября', 'декабря'];
+const curDen = () => ADDR.seed || dayOf(Date.now());
+let mode = 'free', denSeed = curDen(), popytka = 0, freeN = 0, lastWeapon = 0;
+const denLong = () => (denSeed % 100) + ' ' + MONTHS[Math.floor(denSeed / 100) % 100 - 1];
+const denShort = () => String(denSeed % 100).padStart(2, '0') + '.' + String(Math.floor(denSeed / 100) % 100).padStart(2, '0');
+const denKey = () => 'naotmash-den-' + denSeed;
+const denWeapon = () => hash(denSeed, 7) % WEAPONS.length;
+function denTries() {
+    try {
+        const a = JSON.parse(localStorage.getItem(denKey()));
+        return Array.isArray(a) ? a.filter((x) => Number.isFinite(x)) : [];
+    } catch { return []; }
+}
+function denSave(sc) {
+    const a = denTries(); a.push(sc);
+    try { localStorage.setItem(denKey(), JSON.stringify(a)); } catch { /* приватный режим */ }
+    return a;
+}
+
+/** Счётчик: молчит, если umami нет (локально, офлайн, блокировщик). Про человека — ничего. */
+function puls(name, data) {
+    try { if (window.umami && typeof window.umami.track === 'function') window.umami.track(name, data); } catch { /* кадр не роняем */ }
+}
+
+/** Начать партию. 'den' — забег дня (оружие назначает сид), 'free' — своё оружие. */
+function beginRun(m, wi) {
+    mode = m;
+    denSeed = curDen();
+    if (m === 'den') wi = denWeapon();
+    lastWeapon = wi;
+    const w = { ...WEAPONS[wi][2] };
+    w.len0 = w.len;
+    Object.assign(S, w); Object.assign(BASE, w);   // выбор переживает смерть
+    reset();
+    tSec = 0;
+    $('start').classList.remove('on');
+    $('over').classList.remove('on');
+    started = true;
+    if (m === 'den') {
+        popytka = denTries().length + 1;
+        puls('zabeg-nachalo', { den: denSeed, popytka });
+    } else {
+        popytka = ++freeN;
+        puls('svobodnaya-nachalo', { popytka });
+    }
+    ui();
+    audioOn();                            // настоящее касание: звук заводится сразу
+    if (ac && ac.state !== 'running') ac.resume?.();
+}
+
+async function shareDen(btn) {
+    const text = 'Наотмашь, забег ' + denShort() + ': ' + score + ' очков';
+    const url = location.origin + location.pathname + '?seed=' + denSeed;
+    const say = (t) => { const sp = btn.querySelector('span'); if (sp) sp.textContent = t; };
+    try {
+        if (navigator.share) { await navigator.share({ text, url }); puls('podelilsya', { den: denSeed }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    try {
+        await navigator.clipboard.writeText(text + ' ' + url);
+        say('ссылка скопирована'); puls('podelilsya', { den: denSeed });
+    } catch { say(url); }
+}
 
 /** Контекст можно завести только из настоящего касания. */
 function audioOn() {
@@ -1610,12 +1769,17 @@ const PROPS = {
 
 function seedBarrels() {
     barrels = [];
+    let sig = '';
     const put = (kind, n) => {
         for (let i = 0; i < n; i++) {
             const k = PROPS[kind];
-            barrels.push({ kind, x: rnd(70, W - 70), y: rnd(100, H - 100),
+            const u = rProp(), v = rProp();      // доли поля: от размера экрана не зависят
+            barrels.push({ kind, x: 70 + u * (W - 140), y: 100 + v * (H - 200),
                 r: k.r, hp: k.hp, dead: false });
+            sig += Math.round(u * 100) + ',' + Math.round(v * 100) + ' ';
         }
+        note('реквизит ' + wave + ':' + kind + '×' + n + ' ' + sig);
+        sig = '';
     };
     put('бочка', 2 + Math.floor(wave / 4));
     put('ящик', 2);
@@ -1638,9 +1802,9 @@ function blowBarrel(b) {
     blown++;
     if (!PROPS[b.kind].boom) {         // ящик и столб просто рассыпаются
         for (let k = 0; k < 8; k++) {
-            const a = rnd(0, 6.283), sp = rnd(120, 340);
+            const a = rFx(0, 6.283), sp = rFx(120, 340);
             bits.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-                r: rnd(2, 4.5), ang: a, spin: rnd(-14, 14), t: rnd(0.4, 0.9), boss: true });
+                r: rFx(2, 4.5), ang: a, spin: rFx(-14, 14), t: rFx(0.4, 0.9), boss: true });
         }
         blip(190, 0.18, 'square', 0.14, 70);
         shake = Math.min(1, shake + 0.35);
@@ -1651,9 +1815,9 @@ function blowBarrel(b) {
     blip(90, 0.45, 'sawtooth', 0.28, 40);
     buzz(70);
     for (let k = 0; k < 14; k++) {
-        const a = rnd(0, 6.283), sp = rnd(180, 520);
+        const a = rFx(0, 6.283), sp = rFx(180, 520);
         bits.push({ x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-            r: rnd(2.5, 5), ang: a, spin: rnd(-16, 16), t: rnd(0.5, 1), boss: true });
+            r: rFx(2.5, 5), ang: a, spin: rFx(-16, 16), t: rFx(0.5, 1), boss: true });
     }
     for (const e of foes) {
         const d = Math.hypot(e.x - b.x, e.y - b.y);
@@ -1719,11 +1883,17 @@ function tickBarrels(dt) {
  * награда капает под ноги и подбирается не останавливаясь. Поэтому карточки
  * прокачки заменены на то, что валяется на арене.
  */
-function dropBoon(x, y, kind) {
+function dropBoon(x, y, kind, wave_) {
+    // Предмет — функция сида и номера дропа (с убийства — своя нумерация,
+    // за волну — номер волны): порядок убийств у разных игроков разный, а
+    // N-й предмет обязан совпасть.
+    const key = wave_ ? -wave : ++dropN;
+    rDrop = stream(hash(seed, key, 3));
     const idx = kind === 'оружие'
-        ? Math.floor(rnd(0, WEAPONS.length))
-        : Math.floor(rnd(0, UPGRADES.length));
-    boons.push({ x, y, kind, idx, t: 26, bob: rnd(0, 6.283) });
+        ? Math.floor(rDrop(0, WEAPONS.length))
+        : Math.floor(rDrop(0, UPGRADES.length));
+    note('дроп ' + (wave_ ? 'в' + wave : 'к' + key) + ':' + kind + ':' + idx);
+    boons.push({ x, y, kind, idx, t: 26, bob: rFx(0, 6.283) });
 }
 
 function takeBoon(b) {
@@ -1828,7 +1998,7 @@ function offerCards() {
     paused = true;
     score += 40 * wave;                 // за пройденную волну
     const pool = UPGRADES.slice(), pick = [];
-    while (pick.length < 3 && pool.length) pick.push(pool.splice(Math.floor(rnd(0, pool.length)), 1)[0]);
+    while (pick.length < 3 && pool.length) pick.push(pool.splice(Math.floor(rFx(0, pool.length)), 1)[0]);
     const el = $('cards');
     el.innerHTML = '<h2>Волна ' + wave + ' зачищена</h2>' +
         pick.map((u, i) => '<button data-u="' + i + '" aria-label="' + u[0] + '">' +
@@ -2100,7 +2270,7 @@ function drawGround() {
 
 function draw() {
     ctx.save();
-    if (shake > 0) ctx.translate(rnd(-2.5, 2.5) * shake, rnd(-2.5, 2.5) * shake);
+    if (shake > 0) ctx.translate(rFx(-2.5, 2.5) * shake, rFx(-2.5, 2.5) * shake);
 
     drawGround();
     // Где сейчас заходят: расходящееся кольцо на кромке. Оно живёт секунду и
@@ -2398,6 +2568,7 @@ function ui() {
     for (const p of pts) mx = Math.max(mx, Math.hypot(...vel(p)));
     $('mx').textContent = Math.round(mx);
     $('wv').textContent = wave;
+    $('dn').textContent = mode === 'den' ? '· забег ' + denShort() : '';
     $('sc').textContent = score;
     $('th').textContent = !theme ? ''
         : wave % 5 === 0 ? ((wave / 5) % 2 === 0 ? '· червь' : '· туша')
@@ -2456,8 +2627,12 @@ $('gear').addEventListener('click', () => {
 });
 
 $('over').addEventListener('click', (ev) => {
-    if (!ev.target.closest('button')) return;
+    const b = ev.target.closest('button');
+    if (!b) return;
+    if (b.dataset.act === 'share') { shareDen(b); return; }
+    if (b.dataset.act === 'again') { beginRun(mode, lastWeapon); return; }   // тот же забег, без списка
     $('over').classList.remove('on');
+    mode = 'free';
     reset();
     showStart();
 });
@@ -2473,14 +2648,8 @@ document.querySelector('.game-home-menu').addEventListener('click', (ev) => {
 $('start').addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
     if (!b) return;
-    const w = { ...WEAPONS[+b.dataset.w][2] };
-    w.len0 = w.len;
-    Object.assign(S, w); Object.assign(BASE, w);   // выбор переживает смерть
-    reset();
-    $('start').classList.remove('on');
-    started = true;
-    audioOn();                            // настоящее касание: звук заводится сразу
-    if (ac && ac.state !== 'running') ac.resume?.();
+    if (b.dataset.den) beginRun('den');
+    else beginRun('free', +b.dataset.w);
 });
 
 // Палец закрывает собой то, чем машешь, поэтому на тачскрине рука идёт выше него.
@@ -2553,6 +2722,7 @@ window.naotmash = {
         const w = { ...WEAPONS[o.weapon || 0][2] };
         w.len0 = w.len;
         Object.assign(S, w); Object.assign(BASE, w);
+        mode = 'free';
         resize();
         if (!W || !H) { W = 450; H = 900; sc = 1; ctx.setTransform(1, 0, 0, 1, 0, 0); }
         reset();
@@ -2705,6 +2875,37 @@ window.naotmash = {
         S.sound = !v;
         if (bus) bus.gain.value = v ? 0 : 1;
         return !S.sound || !ac;
+    },
+    /** Журнал расписания забега: волна:тема, враг волна.номер:вид:край,
+     *  реквизит, дроп. Одинаков у всех с одним сидом — это и проверяется. */
+    otpechatok() { return fp.slice(); },
+    bessmertie(v) { god = v !== false; return god; },
+    /** Синхронный прогон бота по забегу дня (сид — ?seed=): для проверки
+     *  расписания. bot: 'стоит' (круг на месте) | 'машет' (круг с ходьбой);
+     *  stop — волн и дропов, после которых хватит; по умолчанию бессмертие. */
+    partiya(o) {
+        o = o || {};
+        filming = false;
+        beginRun('den');
+        god = o.god !== false;
+        aim.down = true;
+        const stopW = o.waves || 3, stopD = o.drops || 2;
+        let k = 0;
+        const maxK = 120 * (o.sek || 900);
+        while (k < maxK && dead <= 0 && !gateLost) {
+            const t = k++ / 120;
+            const cx = o.bot === 'машет' ? W / 2 + 150 * Math.sin(t * 0.7) : W / 2;
+            const cy = o.bot === 'машет' ? H / 2 + 100 * Math.cos(t * 0.5) : H / 2;
+            const rr = o.bot === 'машет' ? 90 : 120, sp = o.bot === 'машет' ? 11 : 7;
+            aim.x = cx + Math.cos(t * sp) * rr; aim.y = cy + Math.sin(t * sp) * rr;
+            if (paused) startWave();
+            step(1 / 120);
+            if (wave >= stopW && fp.filter((x) => x.startsWith('дроп')).length >= stopD) break;
+        }
+        const r = { сек: Math.round(tSec), волна: wave, дропов: fp.filter((x) => x.startsWith('дроп')).length,
+            убито: kills, умер: dead > 0, ворота: gateLost, отпечаток: fp.slice() };
+        god = false;
+        return r;
     },
     render() { draw(); return this; },
     state() {
