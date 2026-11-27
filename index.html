@@ -1494,8 +1494,8 @@ const RULES = '<details><summary>как это работает</summary><ul>' +
     '</ul></details>';
 
 function showResultDen() {
-    const tries = denSave(score);
-    const n = tries.length, best = Math.max(...tries);
+    const tries = denSave(score, popytka);
+    const n = popytka || tries.length, best = Math.max(...tries);
     const today = denSeed === dayOf(Date.now());
     const tag = !today ? 'забег того дня' : n === 1 ? 'в зачёт' : 'тренировка';
     puls('zabeg-konec', { den: denSeed, popytka: n, schyot: score, volna: wave, ubito: kills, sek: Math.round(tSec) });
@@ -1546,7 +1546,7 @@ function showStart() {
         '<span>Его берут, пока ты бегаешь. Кнопки удара нет: бьёт скорость, ' +
         'а не касание.</span></p>' +
         '<button class="den" data-den="1" aria-label="Забег дня">' +
-            '<span class="tx"><b>' + (ADDR.seed && ADDR.seed !== dayOf(Date.now()) ? 'Забег того дня' : 'Забег дня') +
+            '<span class="tx"><b>' + (denSeed !== dayOf(Date.now()) ? 'Забег того дня' : 'Забег дня') +
             ' · ' + denLong() + ' · попытка ' + (denTries().length + 1) + '</b>' +
             '<span>на руке: ' + WEAPONS[denWeapon()][0] + ' · волны одни на всех</span></span>' +
             '<span class="arw">›</span></button>' +
@@ -1660,7 +1660,8 @@ const dayOf = (ms) => {
 };
 const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа',
     'сентября', 'октября', 'ноября', 'декабря'];
-const curDen = () => ADDR.seed || dayOf(Date.now());
+// будущая дата (?seed= завтра) не открывается: завтрашний забег — завтра
+const curDen = () => (ADDR.seed && ADDR.seed <= dayOf(Date.now()) ? ADDR.seed : dayOf(Date.now()));
 let mode = 'free', denSeed = curDen(), popytka = 0, freeN = 0, lastWeapon = 0;
 const denLong = () => (denSeed % 100) + ' ' + MONTHS[Math.floor(denSeed / 100) % 100 - 1];
 const denShort = () => String(denSeed % 100).padStart(2, '0') + '.' + String(Math.floor(denSeed / 100) % 100).padStart(2, '0');
@@ -1672,8 +1673,11 @@ function denTries() {
         return Array.isArray(a) ? a.filter((x) => Number.isFinite(x)) : [];
     } catch { return []; }
 }
-function denSave(sc) {
-    const a = denTries(); a.push(sc);
+// Попытка пишется в начале (счёт 0) и обновляется в конце: перезагрузка посреди
+// забега не возвращает «попытку 1 · в зачёт».
+function denSave(sc, n) {
+    const a = denTries();
+    if (n >= 1 && n <= a.length) a[n - 1] = sc; else a.push(sc);
     try { localStorage.setItem(denKey(), JSON.stringify(a)); } catch { /* приватный режим */ }
     return a;
 }
@@ -1699,6 +1703,7 @@ function beginRun(m, wi) {
     started = true;
     if (m === 'den') {
         popytka = denTries().length + 1;
+        denSave(0);
         puls('zabeg-nachalo', { den: denSeed, popytka });
     } else {
         popytka = ++freeN;
