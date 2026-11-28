@@ -6,7 +6,7 @@ const PORT = +(process.env.NAO_PORT || 9435);
 const PROFILE = process.env.NAO_PROFILE || process.env.HOME + '/dev/trash/naotmash-zabeg/profile';   // свой профиль, не Сергея
 export async function launch() {
   mkdirSync(PROFILE, { recursive: true });
-  const proc = spawn(CHROME, ['--headless=new', '--mute-audio', '--user-data-dir=' + PROFILE,
+  const proc = spawn(CHROME, ['--headless=new', '--mute-audio', '--disable-audio-output', '--user-data-dir=' + PROFILE,
     '--remote-debugging-port=' + PORT, '--no-first-run', '--disable-gpu', 'about:blank'], { stdio: 'ignore' });
   let list;
   for (let i = 0; i < 60; i++) {
